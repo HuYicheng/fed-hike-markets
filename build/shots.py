@@ -28,7 +28,6 @@ def js(expr):
     return r["result"].get("value")
 
 for m in ("Runtime.enable", "Page.enable", "Log.enable"): call(m)
-PAGES = ["home", "rise", "early", "sector", "stocks", "drivers", "hk0307", "now", "coverage", "method"]
 CHECK = """(() => {
   const pg = document.querySelector('section.page:not([hidden])');
   const charts = [...pg.querySelectorAll('.chart[data-c]')].map(c => ({id: c.dataset.c, ok: !!c.querySelector('svg, .hrows, table, .panels') && !c.querySelector('.err'), err: (c.querySelector('.err') || {}).textContent || ''}));
@@ -44,6 +43,7 @@ for width, mobile in [(1280, False), (390, True)]:
         call("Page.navigate", url="about:blank"); time.sleep(0.2)
         events.clear()
         call("Page.navigate", url=base + "#home"); time.sleep(1.2)
+        PAGES = js("[...document.querySelectorAll('section.page')].map(s => s.id.slice(2))")
         for p in PAGES:
             js(f"location.hash = '#{p}'"); time.sleep(0.6)
             info = js(CHECK)

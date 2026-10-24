@@ -98,23 +98,91 @@ D["fed"] = {"pts": pts, "end": isot(tgt.date.iloc[-1]),
 D["pool"] = [{"c": r.cycle, "w": r.window, "m": r.market, "idx": r4(r["index"]), "tw": r4(r.pool_tw), "med": r4(r["median"]), "up": r4(r.pct_up), "n": int(r.n_pool)} for _, r in T30.iterrows()]
 D["idx"] = {m: {c: {w: r4(IDX(m, c, w)) for w in ["h6m", "hiking", "to_cut"]} for c in ANAL if pd.notna(IDX(m, c, "h6m"))} for m in MS}
 
-# ------------------------------------------------------------------ index paths from the first hike (=100) to the next cut
-PX = {"hk": pd.read_csv("data/raw/yahoo_IDX_HSI.csv", index_col=0, parse_dates=True)["Close"],
-      "us": pd.read_csv("data/raw/yahoo_IDX_GSPC.csv", index_col=0, parse_dates=True)["Close"],
-      "cn": pd.read_csv("data/raw/sina_IDX_SHCOMP.csv", parse_dates=["date"]).set_index("date")["close"]}
-D["paths"] = {}
-for m, s in PX.items():
-    s = s.astype(float).dropna(); s = s[~s.index.duplicated()].sort_index(); D["paths"][m] = {}
+# ------------------------------------------------------------------ index paths: several indices per market, from the first hike (=100) to the next cut
+# An index is drawn for a segment only if it was officially published before the first hike F (earlier values are
+# back-calculated with constituents chosen later) and has a close within 7 days before F. Publication dates and sources:
+# data/raw/indices_more/launch_dates.tsv; second-source checks: data/raw/indices_more/check_report.tsv (93_check_more_indices.py).
+def _load(path, fmt):
+    if fmt == "yahoo+sina":   # HSI: Sina from 2013, Yahoo before. Yahoo's 2023-08-25 close is wrong (Tencent and Sina agree)
+        return _load(path[1], "dc").combine_first(_load(path[0], "yahoo"))
+    if fmt == "yahoo":
+        d = pd.read_csv(path, index_col=0); s = pd.Series(d["Close"].astype(float).values, index=pd.to_datetime(d.index.astype(str).str[:10]))
+    else:
+        d = pd.read_csv(path); s = pd.Series(pd.to_numeric(d["close"], errors="coerce").values, index=pd.to_datetime(d["date"].astype(str).str[:10]))
+    s = s.dropna(); return s[~s.index.duplicated()].sort_index()
+IDXS = [  # key, market, name, file, format, official publication date (None: published long before 1987)
+    ("HSI", "hk", "恒指", ("data/raw/yahoo_IDX_HSI.csv", "data/raw/sina_IDX_HSI.csv"), "yahoo+sina", None),
+    ("HSCEI", "hk", "国企指数", "data/raw/yahoo_IDX_HSCE.csv", "yahoo", "1994-08-08"),
+    ("HSTECH", "hk", "恒生科技", "data/raw/indices_more/sina_HSTECH.csv", "dc", "2020-07-27"),
+    ("SP500", "us", "标普 500", "data/raw/yahoo_IDX_GSPC.csv", "yahoo", None),
+    ("NASDAQ", "us", "纳斯达克综合", "data/raw/indices_more/check/fred_NASDAQCOM.csv", "dc", None),   # official close; Yahoo ^IXIC is off by up to 1% on ~90 days in 2003-04
+    ("DJI", "us", "道琼斯工业", "data/raw/indices_more/yahoo_DJI.csv", "dc", None),
+    ("RUT", "us", "罗素 2000", "data/raw/indices_more/yahoo_RUT.csv", "dc", None),
+    ("SHCOMP", "cn", "上证综指", "data/raw/sina_IDX_SHCOMP.csv", "dc", None),
+    ("SZCOMP", "cn", "深证成指", "data/raw/indices_more/sina_sz399001.csv", "dc", "1995-01-23"),
+    ("SSE50", "cn", "上证 50", "data/raw/indices_more/sina_sh000016.csv", "dc", "2004-01-02"),
+    ("CSI300", "cn", "沪深 300", "data/raw/indices_more/sina_sh000300.csv", "dc", "2005-04-08"),
+    ("CSI500", "cn", "中证 500", "data/raw/indices_more/sina_sh000905.csv", "dc", "2007-01-15"),
+    ("CHINEXT", "cn", "创业板指", "data/raw/indices_more/sina_sz399006.csv", "dc", "2010-06-01"),
+    ("STAR50", "cn", "科创 50", "data/raw/indices_more/sina_sh000688.csv", "dc", "2020-07-23")]
+MAINIDX = {"hk": "HSI", "us": "SP500", "cn": "SHCOMP"}
+SHORT = {"HSI": "恒指", "HSCEI": "国企", "HSTECH": "恒科", "SP500": "标普", "NASDAQ": "纳指", "DJI": "道指", "RUT": "罗素", "SHCOMP": "上证", "SZCOMP": "深成指",
+         "SSE50": "上证50", "CSI300": "沪深300", "CSI500": "中证500", "CHINEXT": "创业板", "STAR50": "科创50"}   # end labels on phones
+def px_at(s, d, stale=7):
+    s2 = s.loc[:d]; return np.nan if not len(s2) or (d - s2.index[-1]).days > stale else float(s2.iloc[-1])
+D["ip"] = {}
+for key, m, name, path, fmt, pub in IDXS:
+    s = _load(path, fmt); sg = {}
     for c in ANAL:
         F, L, Cc = T0.first_hike[c], T0.last_hike[c], T0.first_cut_after[c]
-        if s.index[0] > F - pd.Timedelta(days=10): continue
-        base = s.loc[:F].iloc[-1]; seg = s.loc[F:Cc]
-        wk = seg.resample("W-FRI").last().dropna()
-        xs = [(0.0, 100.0)] + [((d - F).days / 30.44, v / base * 100) for d, v in wk.items() if d > F] + [((Cc - F).days / 30.44, s.loc[:Cc].iloc[-1] / base * 100)]
-        endret = s.loc[:Cc].iloc[-1] / base - 1
-        assert abs(endret - IDX(m, c, "to_cut")) < 0.006, (m, c, endret, IDX(m, c, "to_cut"))
-        D["paths"][m][c] = {"pts": [[round(x, 2), round(y, 2)] for x, y in xs],
-                            "L": (None if single(c) else [round((L - F).days / 30.44, 2), round(s.loc[:L].iloc[-1] / base * 100, 2)])}
+        if pub and pd.Timestamp(pub) > F: continue
+        base, endv = px_at(s, F), px_at(s, Cc)
+        if np.isnan(base) or np.isnan(endv): continue
+        wk = s.loc[F:Cc].resample("W-FRI").last().dropna()
+        xs = [(0.0, 100.0)] + [((d - F).days / 30.44, v / base * 100) for d, v in wk.items() if d > F] + [((Cc - F).days / 30.44, endv / base * 100)]
+        r = {"h6m": px_at(s, F + pd.DateOffset(months=6)) / base - 1, "hiking": (None if single(c) else px_at(s, L) / base - 1), "to_cut": endv / base - 1}
+        sg[c] = {"pts": [[round(x, 2), round(y, 2)] for x, y in xs], "L": (None if single(c) else [round((L - F).days / 30.44, 2), round(px_at(s, L) / base * 100, 2)]),
+                 "r": {k: r4(v) for k, v in r.items()}}
+    D["ip"][key] = {"m": m, "name": name, "short": SHORT[key], "pub": pub, "first": isot(s.index[0]), "segs": sg}
+# the same returns as the reports' T1 tables (HK T1 used Yahoo for Nasdaq and the Shanghai index)
+T1MAP = [("hk", "HSI", "HSI"), ("hk", "HSCEI", "HSCEI"), ("hk", "SP500", "SP500"), ("hk", "Nasdaq", "NASDAQ"), ("hk", "Shanghai", "SHCOMP"),
+         ("us", "SP500", "SP500"), ("cn", "SHCOMP", "SHCOMP"), ("cn", "CSI300", "CSI300")]
+n_t1, worst_t1 = 0, 0.0
+for m, t1key, key in T1MAP:
+    t = TB[m]["T1"]
+    for c, sg in D["ip"][key]["segs"].items():
+        r = t[(t.cycle == c) & (t["index"] == t1key)]
+        if not len(r): continue
+        for w in ["h6m", "hiking", "to_cut"]:
+            a_, b_ = sg["r"][w], r[w].iloc[0]
+            if a_ is None or pd.isna(b_): continue
+            n_t1 += 1; worst_t1 = max(worst_t1, abs(a_ - b_))
+            assert abs(a_ - b_) < 0.006, ("T1 mismatch", m, t1key, c, w, a_, b_)
+# second source for each index, compared inside every hike window the site draws (F to C)
+SECOND = {"HSI": ("data/raw/yahoo_IDX_HSI.csv", "yahoo"), "HSCEI": ("data/raw/indices_more/sina_HSCEI.csv", "dc"), "SP500": ("data/raw/wrds/us/dsi.parquet", "crsp"),
+          "NASDAQ": ("data/raw/yahoo_IDX_IXIC.csv", "yahoo"), "DJI": ("data/raw/indices_more/check/fred_DJIA.csv", "dc"), "SHCOMP": ("data/raw/yahoo_000001_SS.csv", "yahoo"),
+          "SZCOMP": ("data/raw/indices_more/check/yahoo_399001.csv", "dc"), "SSE50": ("data/raw/indices_more/check/tx_sh000016.csv", "dc"),
+          "CSI300": ("data/raw/indices_more/check/tx_sh000300.csv", "dc"), "CSI500": ("data/raw/indices_more/check/tx_sh000905.csv", "dc"),
+          "CHINEXT": ("data/raw/indices_more/check/tx_sz399006.csv", "dc"), "STAR50": ("data/raw/indices_more/check/tx_sh000688.csv", "dc")}
+SRC2 = {"HSI": "Yahoo", "HSCEI": "新浪", "SP500": "CRSP", "NASDAQ": "Yahoo", "DJI": "FRED", "SHCOMP": "Yahoo", "SZCOMP": "Yahoo", "SSE50": "腾讯", "CSI300": "腾讯",
+        "CSI500": "腾讯", "CHINEXT": "腾讯", "STAR50": "腾讯"}
+CHK2 = []
+for key, (path, fmt) in SECOND.items():
+    if fmt == "crsp":
+        d = pd.read_parquet(path); q = pd.Series(d.spindx.values, index=pd.to_datetime(d.date)).dropna().sort_index()
+    else: q = _load(path, fmt)
+    p_ = _load(dict((k, f) for k, _, _, f, _, _ in IDXS)[key], dict((k, fm) for k, _, _, _, fm, _ in IDXS)[key])
+    for c in D["ip"][key]["segs"]:
+        F, Cc = T0.first_hike[c], T0.first_cut_after[c]; cm = p_.loc[F:Cc].index.intersection(q.loc[F:Cc].index)
+        if len(cm) < 20: continue
+        dif = (p_[cm] / q[cm] - 1).abs()
+        CHK2.append({"k": key, "c": c, "n": len(cm), "max": float(dif.max()), "n05": int((dif > 0.005).sum())})
+CHK2 = pd.DataFrame(CHK2); CHK2.to_csv("data/raw/indices_more/check_in_windows.tsv", sep="\t", index=False)
+YBAD = {"NASDAQ": "纳斯达克综合", "SHCOMP": "上证综指", "HSI": "恒指"}   # second source is Yahoo; a third source decided which side is right
+chk_ok = CHK2[~CHK2.k.isin(list(YBAD))]
+ybad = {k: CHK2[(CHK2.k == k) & (CHK2.n05 > 0)] for k in YBAD}
+for m, key in MAINIDX.items():   # every analysed segment with stock data has its market's main index
+    assert all(c in D["ip"][key]["segs"] for c in cycles_of(m)), (m, key)
 
 # ------------------------------------------------------------------ first six months against all six-month windows (T10 index, T19c pool index)
 D["early"] = {}
@@ -339,10 +407,33 @@ rise = (ul(rise_keys)
         + fig("spread", "同一段里，三地差多少", "每行是一段加息（加息期；1997-03 用到降息），三个点是三个市场的中位数股票，线的长度就是最好和最差相差多少。", h=260)
         + fig("bench", "指数、加权指数和多数股票", "每段三根柱：指数（恒指、标普 500、上证综指）、成交活跃的股票按成交额加权、中位数股票。加权指数和指数大体同向，中位数股票常常落后。", wide=True, h=300)
         + fig("breadth", "上涨股票占多少", "成交活跃的股票里上涨的比例。虚线是一半。", wide=True, h=260)
-        + fig("paths", "开始加息以后，指数一路怎么走", "第一次加息那天定为 100，横轴是之后过了几个月。圆点是最后一次加息，线的终点是下一次降息。点一段的名字可以突出这一段。", wide=True, h=340)
         + '<h2 class="sec">某段港股好，美股和 A 股是不是也好</h2><p>把各段按中位数股票的表现排序，看两个市场的排序是否一致（秩相关，1 = 完全一致，−1 = 完全相反）：'
         + "，".join(f"{r.pair} {sn(r.rho)}（{r.n} 段，{pv(r.p)}）" for r in T31.itertuples()) + "。都不显著。只有 5–6 个共同的段，就算真有联系也很难看出来，所以是看不清，不是没有关系。</p>")
+rise += '<p>纳斯达克、沪深 300、恒生科技等各个指数每段一路怎么走，见' + a("indices", "指数走势") + '。</p>'
 PAGES.append(page("rise", "涨跌", "每段加息期间，三地股市是涨是跌", rise))
+
+# ---- index paths
+IPN = {k: v for k, v in D["ip"].items()}
+first_seg = {k: min(v["segs"]) if v["segs"] else None for k, v in IPN.items()}
+late = [k for k, v in IPN.items() if v["pub"] and first_seg[k] and first_seg[k] > ANAL[0]]
+def ip_best_worst(c, w="to_cut"):
+    vals = [(IPN[k]["segs"][c]["r"][w], k) for k in IPN if c in IPN[k]["segs"] and IPN[k]["segs"][c]["r"][w] is not None]
+    hi, lo = max(vals), min(vals); return hi, lo, len(vals)
+bw_txt = "；".join(f"{c} {IPN[ip_best_worst(c)[0][1]]['name']} {pc(ip_best_worst(c)[0][0])}、{IPN[ip_best_worst(c)[1][1]]['name']} {pc(ip_best_worst(c)[1][0])}（{ip_best_worst(c)[2]} 个指数）" for c in ANAL)
+idx_list = "；".join(f"{nm(m)}：" + "、".join(IPN[k]["name"] for k in IPN if IPN[k]["m"] == m) for m in MS)
+late_txt = "，".join(f"{IPN[k]['name']}从 {first_seg[k]} 段开始" for k in sorted(late, key=lambda k: first_seg[k]))
+indices = (ul([f"每个市场取几个常用的指数。{idx_list}。",
+               f"指数只画它正式发布以后的加息段。发布以前的点位是事后按后来选定的成分股回算的，会把后来涨得好的公司提前算进去。所以{late_txt}。",
+               "从第一次加息到下一次降息，每段表现最好和最差的指数：" + bw_txt + "。"])
+           + fig("ipSeg", "同一段加息里，几个指数叠在一起比", "先选一段加息，再点指数名字加上或去掉。第一次加息那天都定为 100，横轴是之后过了几个月，圆点是最后一次加息，线走到下一次降息。颜色分市场，线型分指数。", wide=True, h=400)
+           + fig("ipIdx", "一个指数在每段加息里怎么走", "选市场和指数。点段名可以突出这一段，灰线是其他各段。", wide=True, h=340)
+           + fig("ipHeat", "每个指数在每段里涨了多少", "切换时间窗。空格表示那时这个指数还没发布或没有数据。", wide=True, h=520)
+           + '<p class="note">点位来源：恒指、国企指数、标普 500、道琼斯工业、罗素 2000 用 Yahoo；纳斯达克综合用纳斯达克交易所的官方收盘价（经 FRED）；上证综指、深证成指、上证 50、沪深 300、中证 500、创业板指、科创 50、恒生科技用新浪。'
+           + f"除恒生科技和罗素 2000 外，每个指数都用第二个来源在各加息段里逐日核对过点位。{chk_ok.k.nunique()} 个指数两边最大相差 {chk_ok['max'].max()*100:.2f}%。"
+           + "相差超过 0.5% 的只有 Yahoo 的个别日子：" + "；".join(f"{YBAD[k]} {cl(list(v.c))} 段 {int(v.n05.sum())} 天（最多 {v['max'].max()*100:.1f}%）" for k, v in ybad.items() if len(v))
+           + "。这些日子另用腾讯或纳斯达克官方收盘价核对，都是 Yahoo 错了；网站用的是对的数据（恒指 2013 年以后用新浪）。"
+           + f"恒指、标普 500、上证综指等原来报告里也有的指数，算出的涨跌与报告的结果表核对过（{n_t1} 个数，最大差 {worst_t1*100:.1f} 个百分点）。</p>")
+PAGES.append(page("indices", "指数走势", "每段加息以后，各个指数一路怎么走", indices))
 
 # ---- first six months
 def early_line(m):
@@ -503,7 +594,7 @@ method = (ul(["<b>加息段</b>：用美联储公布的联邦基金目标利率�
 PAGES.append(page("method", "怎么算的", "加息段怎么分、股票怎么选、用了哪些检验", method))
 
 # ================================================================== write
-NAV = [("home", "首页"), ("rise", "涨跌"), ("early", "加息初期"), ("sector", "行业"), ("stocks", "个股"), ("drivers", "推动力"), ("hk0307", "2003–07 港股"),
+NAV = [("home", "首页"), ("rise", "涨跌"), ("indices", "指数走势"), ("early", "加息初期"), ("sector", "行业"), ("stocks", "个股"), ("drivers", "推动力"), ("hk0307", "2003–07 港股"),
        ("now", "这次加息"), ("coverage", "数据覆盖"), ("method", "怎么算的")]
 if PUBLIC:
     NAV = [x for x in NAV if x[0] != "stocks"]; del D["stocks"]
@@ -521,5 +612,6 @@ open(f"{OUT}/index.html", "w", encoding="utf-8").write(head + body.replace("<!--
 if not PUBLIC:   # keep a copy of the generator next to the page, so the GitHub repo holds what built it
     import shutil
     os.makedirs(f"{OUT}/build", exist_ok=True)
-    for src in ["scripts/91_build_site.py", "scripts/site_template.html", "scripts/site_checks/shots.py"]: shutil.copy2(src, f"{OUT}/build/{os.path.basename(src)}")
+    for src in ["scripts/91_build_site.py", "scripts/site_template.html", "scripts/site_checks/shots.py", "scripts/92_fetch_more_indices.py", "scripts/93_check_more_indices.py"]:
+        shutil.copy2(src, f"{OUT}/build/{os.path.basename(src)}")
 print(f"site: {len(body)/1024:.0f} KB, data {len(data_json)/1024:.0f} KB, {len(PAGES)} pages, {n_checked} headline numbers match report_combined.md")

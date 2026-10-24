@@ -81,6 +81,12 @@ p{max-width:44em}
 .legend i.dot{border-radius:50%}
 .legend i.ring{border-radius:50%;background:transparent!important;border:1.5px solid var(--ink2)}
 .legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;width:16px;vertical-align:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 8px}
+.chips .cg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.chips .cg b{font-size:var(--t-xs);color:var(--ink2);margin-right:2px}
+.chip{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:var(--t-xs);padding:2px 9px;border:1px solid var(--rule);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:var(--ink2);background:var(--bg)}
+.chip[aria-pressed="false"] svg{opacity:.35}
 .plot{position:relative;min-width:0}
 .plot.scroll{overflow-x:auto}
 .plot svg{display:block;max-width:none;font-family:var(--sans)}
@@ -156,7 +162,7 @@ var SVGNS = "http://www.w3.org/2000/svg";
 
 /* ---------- small helpers ---------- */
 function esc(s){ return String(s).replace(/[&<>"']/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
-function fp(v, d){ if (v == null || isNaN(v)) return "—"; d = d || 0; return (v < 0 ? "−" : "+") + Math.abs(v * 100).toFixed(d) + "%"; }
+function fp(v, d){ if (v == null || isNaN(v)) return "—"; d = d || 0; var a = Math.abs(v * 100).toFixed(d); if (+a === 0) return (0).toFixed(d) + "%"; return (v < 0 ? "−" : "+") + a + "%"; }
 function fpp(v, d){ if (v == null || isNaN(v)) return "—"; d = d == null ? 1 : d; var a = Math.abs(v).toFixed(d); if (+a === 0) return (0).toFixed(d); return (v < 0 ? "−" : "+") + a; }
 function fpl(v){ return (v * 100).toFixed(0) + "%"; }
 function S(tag, at, parent){ var e = document.createElementNS(SVGNS, tag); for (var k in at) if (at[k] != null) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; }
@@ -308,26 +314,53 @@ function linePlot(st, h, series, o){
   var w = plotW(st), m = {l: 44, r: o.r || 64, t: 14, b: 30}, svg = svgBox(w, h), xs = [], ys = [];
   series.forEach(function(s){ s.pts.forEach(function(p){ xs.push(p[0]); ys.push(p[1]); }); });
   var x = lin(0, Math.max.apply(null, xs), m.l, w - m.r), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys), pad = (hi - lo) * .06; lo -= pad; hi += pad;
-  var y = lin(lo, hi, h - m.b, m.t);
+  var y = lin(lo, hi, h - m.b, m.t), labs = [];
   ticks(lo, hi, 5).forEach(function(t){ S("line", {x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 6, y(t) + 4, String(t), {"text-anchor": "end", "class": "ax"}); });
   ticks(0, Math.max.apply(null, xs), w < 520 ? 4 : 8).forEach(function(t){ T(svg, x(t), h - 10, w < 520 ? String(t) : t + " 个月", {"text-anchor": "middle", "class": "ax"}); });
   S("line", {x1: m.l, x2: w - m.r, y1: y(100), y2: y(100), style: "stroke:var(--muted)"}, svg);
   series.slice().sort(function(a, b){ return (a.hl ? 1 : 0) - (b.hl ? 1 : 0); }).forEach(function(s){
     var d = s.pts.map(function(p, i){ return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1); }).join("");
-    S("path", {d: d, style: "fill:none;stroke:" + s.color + ";stroke-width:" + (s.hl ? 2.4 : 1.2) + ";stroke-linejoin:round;opacity:" + (s.hl || !o.dim ? 1 : .55)}, svg);
+    S("path", {d: d, style: "fill:none;stroke:" + s.color + ";stroke-width:" + (s.hl ? (s.dash ? 2 : 2.4) : 1.2) + ";stroke-linejoin:round;opacity:" + (s.hl || !o.dim ? 1 : .55) + (s.dash ? ";stroke-dasharray:" + s.dash : "")}, svg);
     S("path", {d: d, style: "fill:none;stroke:transparent;stroke-width:12;cursor:pointer", "data-tip": s.tip, "data-k": s.k}, svg).addEventListener("click", function(){ if (o.pick) o.pick(s.k); });
     if (s.L) S("circle", {cx: x(s.L[0]), cy: y(s.L[1]), r: s.hl ? 4.5 : 3, style: "fill:" + s.color + ";stroke:var(--surface);stroke-width:1.5"}, svg);
-    var e = s.pts[s.pts.length - 1]; if (s.hl || o.labelAll) T(svg, x(e[0]) + 5, y(e[1]) + 4, s.name + " " + Math.round(e[1]), {"class": s.hl ? "lab" : null}); });
+    var e = s.pts[s.pts.length - 1]; if (s.hl || o.labelAll) labs.push({x: x(e[0]) + 5, y: y(e[1]) + 4, t: o.endLab ? o.endLab(s, e) : s.name + " " + Math.round(e[1]), hl: s.hl, c: s.color}); });
+  labs.sort(function(a, b){ return a.y - b.y; });
+  for (var i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 12 && Math.abs(labs[i].x - labs[i - 1].x) < 90) labs[i].y = labs[i - 1].y + 12;
+  for (var j = labs.length - 1; j >= 0; j--){ var lim = j === labs.length - 1 ? h - m.b + 10 : labs[j + 1].y - 12; if (labs[j].y > lim) labs[j].y = lim; }
+  labs.forEach(function(l){ T(svg, l.x, l.y, l.t, {"class": l.hl ? "lab" : null}); });
   st.plot.replaceChildren(svg); }
-R.paths = {init: function(el, st){ st.m = "hk"; st.sel = "2022-03"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); st.chips = H("div", {"class": "seg"}); st.ctl.appendChild(st.chips); },
-  paint: function(el, st){ var mk = st.m, P = D.paths[mk], keys = ANAL.filter(function(c){ return P[c]; }); if (keys.indexOf(st.sel) < 0) st.sel = keys[keys.length - 1];
-    st.chips.innerHTML = ""; keys.forEach(function(c){ var b = H("button", {type: "button", "aria-pressed": String(c === st.sel)}, c); b.addEventListener("click", function(){ st.sel = c; st.rep(); }); st.chips.appendChild(b); });
-    legend(st, [{c: MC(mk), t: "选中的一段"}, {c: "var(--n2)", t: "其他各段"}, {c: MC(mk), cls: "dot", t: "最后一次加息"}]);
-    linePlot(st, hOf(el, 340), keys.map(function(c){ var p = P[c], e = p.pts[p.pts.length - 1];
-      return {k: c, name: c, pts: p.pts, L: p.L, hl: c === st.sel, color: c === st.sel ? MC(mk) : "var(--n2)",
-        tip: "<b>" + IX[mk] + " · " + c + " 段</b><br>" + (p.L ? "最后一次加息时 " + fp(p.L[1] / 100 - 1) + "<br>" : "只加一次<br>") + "到下一次降息（" + CYC[c].C + "）" + fp(e[1] / 100 - 1)}; }),
-      {dim: true, pick: function(k){ st.sel = k; st.rep(); }}); }};
-
+var IP = D.ip, IPK = Object.keys(IP), DASH = ["", "7 3", "2 3", "9 3 2 3", "14 4", "4 2 1 2 1 2", "1 3"], ipDash = {};
+MS.forEach(function(m){ IPK.filter(function(k){ return IP[k].m === m; }).forEach(function(k, i){ ipDash[k] = DASH[i % DASH.length]; }); });
+function lineIcon(k){ return '<svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" style="stroke:' + MC(IP[k].m) + ';stroke-width:2' + (ipDash[k] ? ";stroke-dasharray:" + ipDash[k] : "") + '"/></svg>'; }
+function ipTip(k, c){ var p = IP[k].segs[c], r = p.r; return "<b>" + esc(IP[k].name) + " · " + c + " 段</b><br>前 6 个月 " + fp(r.h6m) + (r.hiking != null ? "<br>加息期 " + fp(r.hiking) : "<br>只加一次，没有加息期") + "<br>到降息（" + CYC[c].C + "）" + fp(r.to_cut); }
+function segButtons(box, list, cur, pick){ box.innerHTML = ""; list.forEach(function(c){ var b = H("button", {type: "button", "aria-pressed": String(c === cur)}, c); b.addEventListener("click", function(){ pick(c); }); box.appendChild(b); }); }
+R.ipSeg = {init: function(el, st){ st.c = "2022-03"; st.sel = null; st.segs = H("div", {"class": "seg"}); st.ctl.appendChild(st.segs); st.chips = H("div", {"class": "chips"}); st.el.insertBefore(st.chips, st.leg); },
+  paint: function(el, st){
+    segButtons(st.segs, ANAL, st.c, function(c){ st.c = c; st.sel = null; st.rep(); });
+    var avail = IPK.filter(function(k){ return IP[k].segs[st.c]; });
+    if (!st.sel){ var pref = ["HSI", "HSTECH", "SP500", "NASDAQ", "SHCOMP", "CSI300", "CHINEXT"]; st.sel = pref.filter(function(k){ return avail.indexOf(k) >= 0; });
+      if (avail.indexOf("HSTECH") < 0 && avail.indexOf("HSCEI") >= 0) st.sel.splice(1, 0, "HSCEI"); if (avail.indexOf("CSI300") < 0 && avail.indexOf("SZCOMP") >= 0) st.sel.push("SZCOMP"); }
+    st.chips.innerHTML = MS.map(function(m){ var ks = avail.filter(function(k){ return IP[k].m === m; }); if (!ks.length) return "";
+      return '<span class="cg"><b>' + MN[m] + "</b>" + ks.map(function(k){ return '<button type="button" class="chip" data-k="' + k + '" aria-pressed="' + (st.sel.indexOf(k) >= 0) + '">' + lineIcon(k) + esc(IP[k].name) + "</button>"; }).join("") + "</span>"; }).join("");
+    st.chips.querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ var k = b.getAttribute("data-k"), i = st.sel.indexOf(k); if (i >= 0) st.sel.splice(i, 1); else st.sel.push(k); st.rep(); }); });
+    var ser = st.sel.filter(function(k){ return IP[k].segs[st.c]; }).map(function(k){ var p = IP[k].segs[st.c]; return {k: k, name: IP[k].name, pts: p.pts, L: p.L, hl: true, color: MC(IP[k].m), dash: ipDash[k], tip: ipTip(k, st.c)}; });
+    if (!ser.length){ st.plot.innerHTML = '<p class="sub">点上面的指数名字，把它加进图里。</p>'; return; }
+    var nar = plotW(st) < 640; linePlot(st, hOf(el, 400), ser, {labelAll: true, r: nar ? 78 : 128, endLab: function(s, e){ return (nar ? IP[s.k].short : s.name) + " " + fp(e[1] / 100 - 1); }}); }};
+R.ipIdx = {init: function(el, st){ st.m = "us"; st.k = "NASDAQ"; st.c = "2022-03"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); st.ks = H("div", {"class": "seg"}); st.ctl.appendChild(st.ks); st.cs = H("div", {"class": "seg"}); st.ctl.appendChild(st.cs); },
+  paint: function(el, st){ var ks = IPK.filter(function(k){ return IP[k].m === st.m && Object.keys(IP[k].segs).length; }); if (ks.indexOf(st.k) < 0) st.k = ks[0];
+    segButtons(st.ks, ks, st.k, function(k){ st.k = k; st.rep(); }); st.ks.querySelectorAll("button").forEach(function(b, i){ b.textContent = IP[ks[i]].name; });
+    var P = IP[st.k].segs, cs = ANAL.filter(function(c){ return P[c]; }); if (cs.indexOf(st.c) < 0) st.c = cs[cs.length - 1];
+    segButtons(st.cs, cs, st.c, function(c){ st.c = c; st.rep(); });
+    legend(st, [{c: MC(st.m), t: "选中的一段"}, {c: "var(--n2)", t: "其他各段"}, {c: MC(st.m), cls: "dot", t: "最后一次加息"}]);
+    linePlot(st, hOf(el, 340), cs.map(function(c){ var p = P[c]; return {k: c, name: c, pts: p.pts, L: p.L, hl: c === st.c, color: c === st.c ? MC(st.m) : "var(--n2)", tip: ipTip(st.k, c)}; }),
+      {dim: true, pick: function(k){ st.c = k; st.rep(); }, endLab: function(s, e){ return s.name + " " + fp(e[1] / 100 - 1); }}); }};
+R.ipHeat = {init: function(el, st){ st.w = "to_cut"; segc(st, "w", [["h6m", "前 6 个月"], ["hiking", "加息期"], ["to_cut", "到降息"]]); legend(st, [{c: "var(--up)", t: "涨"}, {c: "var(--down)", t: "跌"}]); },
+  paint: function(el, st){ var w = st.w, rows = [];
+    MS.forEach(function(m){ rows.push({k: "_" + m, label: MN[m], header: true, color: MC(m)}); IPK.filter(function(k){ return IP[k].m === m; }).forEach(function(k){ rows.push({k: k, label: IP[k].name}); }); });
+    heat(st, {cols: ANAL.map(function(c){ return {c: c, label: c + (wfor(w, c) !== w ? "*" : "")}; }), rows: rows, cap: .6, cmin: 50, cmax: 76, ch: 26, lw: 92,
+      cell: function(r, c){ var p = IP[r.k] && IP[r.k].segs[c.c]; if (!p) return null; var v = p.r[wfor(w, c.c)]; if (v == null) return null;
+        return {v: v, text: fp(v), tip: ipTip(r.k, c.c)}; }});
+    if (ANAL.some(function(c){ return wfor(w, c) !== w; })) st.plot.appendChild(H("p", {"class": "sub"}, "* 1997-03 只加了一次息，没有加息期，用到降息。")); }};
 /* ---------- 7. first six months ---------- */
 R.early = {init: function(el, st){ legend(st, [{c: "var(--n1)", t: "指数"}, {c: "var(--ink2)", cls: "dot", t: "成交活跃的股票按成交额加权"}, {c: "transparent", cls: "dash", t: "平时任意 6 个月的中位数"}]); },
   paint: function(el, st){ var wrap = H("div", {"class": "panels"});
@@ -358,6 +391,7 @@ function heat(st, o){
   cols.forEach(function(c, j){ if (c.group) { T(svg, lw + cw * j + 2, 12, c.group, {"class": "lab"}); if (c.gcolor) S("rect", {x: lw + cw * j + 2, y: 15, width: cw * c.gspan - 6, height: 2, style: "fill:" + c.gcolor}, svg); }
     T(svg, lw + cw * j + cw / 2, top - 6, c.label, {"text-anchor": "middle", "class": "ax"}); });
   rows.forEach(function(r, i){ var yy = top + ch * i;
+    if (r.header){ T(svg, 2, yy + ch / 2 + 5, r.label, {"class": "lab"}); S("rect", {x: 2, y: yy + ch - 4, width: w - 6, height: 1.5, style: "fill:" + (r.color || "var(--rule)")}, svg); return; }
     T(svg, lw - 8, yy + ch / 2 + 4, r.label, {"text-anchor": "end", "class": r.strong ? "lab" : null});
     cols.forEach(function(c, j){ var cell = o.cell(r, c); if (!cell) return; var fill = divColor(cell.v, o.cap);
       S("rect", {x: lw + cw * j + 1, y: yy + 1, width: cw - 2, height: ch - 2, rx: 2, style: "fill:" + fill, "data-tip": cell.tip}, svg);
@@ -472,7 +506,7 @@ R.hkDecomp = {init: function(el, st){ legend(st, [{c: "var(--earn)", t: "盈利�
 
 /* ---------- 12. the 2026 hike: 1997 precedent ---------- */
 R.now97 = {init: function(el, st){ legend(st, MS.map(function(m){ return {c: MC(m), t: IX[m]}; })); },
-  paint: function(el, st){ linePlot(st, hOf(el, 300), MS.filter(function(m){ return D.paths[m]["1997-03"]; }).map(function(m){ var p = D.paths[m]["1997-03"], e = p.pts[p.pts.length - 1];
+  paint: function(el, st){ var MAIN = {hk: "HSI", us: "SP500", cn: "SHCOMP"}; linePlot(st, hOf(el, 300), MS.filter(function(m){ return IP[MAIN[m]].segs["1997-03"]; }).map(function(m){ var p = IP[MAIN[m]].segs["1997-03"], e = p.pts[p.pts.length - 1];
     return {k: m, name: IX[m], pts: p.pts, L: null, hl: true, color: MC(m), tip: "<b>" + IX[m] + "</b><br>1997-03-25 → 1998-09-29 " + fp(e[1] / 100 - 1)}; }), {r: 96}); }};
 
 /* ---------- 13. coverage ---------- */
