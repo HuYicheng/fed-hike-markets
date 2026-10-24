@@ -41,6 +41,7 @@ MULTI = [c for c in ANAL if not single(c)]
 MINUS = "−"
 def _s(s): return s.replace("-", MINUS)
 def pc(x, d=0): return "—" if x is None or pd.isna(x) else _s(f"{x*100:+.{d}f}%")
+def pct0(x): return "—" if x is None or pd.isna(x) else f"{x*100:.0f}%"
 def pc_plain(x, d=0): return "—" if x is None or pd.isna(x) else f"{x*100:.{d}f}%"
 def pcu(x, d=0): return "—" if x is None or pd.isna(x) else f"{abs(x)*100:,.{d}f}%"
 def most(k, n): return "多数段涨" if 2 * k > n else ("一半段涨、一半段跌" if 2 * k == n else "多数段跌")
@@ -310,7 +311,7 @@ D["cov"] = {"hk": [{"c": r.cycle, "nF": int(r.n_codes_with_price_at_F), "cs": in
 for m in MS:
     g = TB[m]["T19"]; g = g[(g.window == "hiking") | ((g.cycle == "1997-03") & (g.window == "to_cut"))]
     D["cov"]["grid"][m] = [{"c": r.cycle, "share": r4(r.share_min), "cont": r4(r.cont_min), "price": r4(r.price_min), "base": bool(r.is_base), "n": int(r.n_pool), "med": r4(r["median"])}
-                           for _, r in g.iterrows()]
+                           for _, r in g.iterrows()]   # share 0 and cont 0 = no threshold (all stocks)
 
 # ================================================================== numbers used in the text
 def main_med(m, c): b = P(m, c, mw(c)); return None if b is None else b["median"]
@@ -349,8 +350,15 @@ def check_against_reports():
 n_checked = check_against_reports()
 
 # ================================================================== page text
+POOL = "成交活跃的股票"
+SCOPE = {"fed": "联邦基金目标利率，不涉及股票", "poolMain": POOL, "spread": POOL, "bench": "指数，加上成交活跃的股票", "breadth": POOL,
+         "ipSeg": "只用指数，不筛股票", "ipIdx": "只用指数，不筛股票", "ipHeat": "只用指数，不筛股票",
+         "early": "指数，加上成交活跃的股票（每月按前 90 天重新筛一次）", "secRel": POOL, "secPool": POOL, "secAgree": POOL, "secAbs": "成交活跃的股票；最下一行是指数",
+         "stocks": "成交活跃的股票；港股另外去掉了两个数据源价格对不上的", "r2": "只用指数，不筛股票", "alpha": "成交活跃的股票（等权组合）", "xsec": POOL,
+         "div": "成交活跃的股票（等权组合）", "hkIdx": "只用指数和商品价格", "hkDecomp": "恒指成分股和全部 H 股，不按成交额筛", "now97": "只用指数，不筛股票",
+         "thresh": "门槛从不设（全部股票）到 0.10%", "surv": "全部股票，不按成交额筛", "cn23": POOL, "poolSize": "全部有价格的股票和成交活跃的股票"}
 def fig(cid, title, how, read="", wide=False, h=None):
-    return (f'<figure class="fig{" wide" if wide else ""}"><figcaption><b>{title}</b><span class="how">{how}</span></figcaption>'
+    return (f'<figure class="fig{" wide" if wide else ""}"><figcaption><b>{title}</b><span class="scope">范围：{SCOPE[cid]}</span><span class="how">{how}</span></figcaption>'
             f'<div class="chart" data-c="{cid}"{f' style="--h:{h}px"' if h else ""}><p class="nojs">图需要浏览器运行脚本才能显示。</p></div>'
             + (f'<p class="read">{read}</p>' if read else "") + "</figure>")
 def page(pid, short, q, body, lede=""):
@@ -381,16 +389,22 @@ home_findings = [
     + f"）。比较同一段里的个股，加息期间分红增加得多的股票涨得更多：{int(xs_sum.loc['dps_growth', 'n'])} 次检验里 {int(xs_sum.loc['dps_growth', 'pos'])} 次显著，反向的 {int(xs_sum.loc['dps_growth', 'neg'])} 次。"
     + a("drivers", "看推动力")]
 pool_sizes = {m: (int(T30[T30.market == m].n_pool.min()), int(T30[T30.market == m].n_pool.max())) for m in MS}
+FLIP = []
+for m in MS:
+    g = pd.DataFrame(D["cov"]["grid"][m]); g = g[(g.cont == 0.9) & (g.price == 0) & (g.share > 0)]
+    for c, x in g.groupby("c"):
+        if x.med.min() < 0 < x.med.max(): FLIP.append(f"{nm(m)} {c}（{pc(x.med.min())} 到 {pc(x.med.max())}）")
 home = (f'<header class="hero"><p class="kicker">港股 · 美股 · A 股　1987–2024 年的 8 段加息</p><h1 class="site">美联储加息与三地股市</h1>'
         f'<p class="hlede">美联储连续几次加息算一段。1987 年 6 月以来共有 {len(T0)} 段加息，{len(ANAL)} 段已经走完（到下一次降息为止），2026-09 一段刚开始。这里把走完的每一段里，港股、美股、A 股是涨是跌、哪些行业和股票跑赢、跟着什么走，放在一起比较。</p></header>'
         + fig("fed", "联邦基金目标利率和加息段", "色块是加息期（第一次到最后一次加息），标了名字的是这里分析的 8 段；浅色块是 1987 年 6 月以前的加息段，没有分析（恒指从 1986 年底才有数据）。2008 年 12 月以后利率是目标区间的上限。2026-09 这段 9 月 17 日刚开始，还没有可看的窗口。", wide=True, h=250)
         + '<h2 class="sec">六个结论</h2><ol class="findings">' + "".join(f"<li>{x}</li>" for x in home_findings) + "</ol>"
+        + (f'<p class="note">注意：这些结论用的是“成交活跃”门槛 0.02%。门槛在 0.01% 到 0.10% 之间换，有 {len(FLIP)} 个市场-段的中位数股票会由涨变跌或由跌变涨：{"、".join(FLIP)}。见' + a("coverage", "数据覆盖") + "。</p>" if FLIP else "")
         + fig("poolMain", "每段加息里，三地的中位数股票涨了多少", "柱子是成交活跃的股票里排在中间那只的涨跌。可以切换时间窗。1987、1988 两段只有美股有个股数据。", wide=True, h=300)
         + '<h2 class="sec">读之前先知道这几个词</h2><dl class="terms">'
         + "<dt>加息段</dt><dd>美联储连续同方向的调整算一段：连着几次加息是一段，只要中间降过一次息就另起一段，暂停不算。用第一次加息的年月命名，如 1994-02。</dd>"
         + "<dt>三个时间窗</dt><dd><b>前 6 个月</b>：第一次加息后 6 个月。<b>加息期</b>：第一次到最后一次加息。<b>到降息</b>：第一次加息到下一次降息。1997-03 那段只加了一次，没有加息期，用到降息代替。</dd>"
         + "<dt>中位数股票</dt><dd>把股票按涨跌排队，排在正中间那只的涨跌。它说的是多数股票怎么样，不受少数大公司左右。</dd>"
-        + f"<dt>成交活跃的股票</dt><dd>第一次加息前 90 天，日均成交额占全市场 0.02% 以上、九成以上交易日有成交的股票，包括后来退市的。每段港股 {pool_sizes['hk'][0]}–{pool_sizes['hk'][1]} 只，美股 {pool_sizes['us'][0]}–{pool_sizes['us'][1]} 只，A 股 {pool_sizes['cn'][0]}–{pool_sizes['cn'][1]} 只。本站说的“股票”都指这些。</dd>"
+        + f"<dt>成交活跃的股票</dt><dd>第一次加息前 90 天里，每天成交额的中位数占全市场 0.02% 以上、九成以上交易日有成交的股票，包括后来退市的。每段港股 {pool_sizes['hk'][0]}–{pool_sizes['hk'][1]} 只，美股 {pool_sizes['us'][0]}–{pool_sizes['us'][1]} 只，A 股 {pool_sizes['cn'][0]}–{pool_sizes['cn'][1]} 只。除非图上另外写明，本站说的“股票”都指这些；每张图标题下都写了用的是哪种范围。具体怎么筛、每段筛掉多少，见" + a("method", "怎么算的") + "。</dd>"
         + "<dt>站得住 / 看不清</dt><dd>统计上显著（p 小于 0.05，或 t 的绝对值不小于 2）叫站得住；不显著叫看不清，意思是数据不够下结论，不是“没有关系”。</dd></dl>")
 PAGES.append(f'<section class="page" id="p-home" data-short="首页" data-title="美联储加息与三地股市" hidden>{home}</section>')
 
@@ -547,6 +561,21 @@ now = (ul([f"2026-09-17 美联储加息 {c26.total_hike_pp*100:.0f} 个基点，
        + fig("now97", "唯一一次单次加息：1997-03 以后三地指数怎么走", "1997-03-25 加息那天定为 100，横轴是之后过了几个月，线走到 1998-09-29 下一次降息。", wide=True, h=300))
 PAGES.append(page("now", "这次加息", "2026 年 9 月这次，过去的数据能说明什么", now))
 
+# ---- what the liquidity rule changes: all stocks (no threshold) against the pool, main window
+FILT = {}
+for m in MS:
+    g = pd.DataFrame(D["cov"]["grid"][m]); allg = g[(g.share == 0) & (g.cont == 0)].set_index("c").med; base = g[g.base].set_index("c").med
+    rows = [(c, allg[c], base[c]) for c in base.index if c in allg.index]
+    FILT[m] = {"big": [(c, a_, b_) for c, a_, b_ in rows if abs(a_ - b_) >= 0.10], "flip": [(c, a_, b_) for c, a_, b_ in rows if np.sign(a_) != np.sign(b_)], "n": len(rows)}
+def thr_line(m):
+    g = pd.DataFrame(D["cov"]["grid"][m]); g = g[(g.cont == 0.9) & (g.price == 0)]
+    lo_, hi_ = g[g.share == 0.0001].set_index("c").med, g[g.share == 0.001].set_index("c").med
+    mv = [(c, lo_[c], hi_[c]) for c in lo_.index if c in hi_.index and abs(hi_[c] - lo_[c]) >= 0.05]
+    return f"{nm(m)} " + ("、".join(f"{c}（{pc(a_)} → {pc(b_)}）" for c, a_, b_ in mv) if mv else "没有")
+def filt_line(m):
+    f = FILT[m]
+    return (f"{nm(m)}：{f['n']} 段里差 10 个百分点以上的 {len(f['big'])} 段" + ("（" + "，".join(f"{c} 全部股票 {pc(a_)}、成交活跃的 {pc(b_)}" for c, a_, b_ in f["big"]) + "）" if f["big"] else "")
+            + "；" + ("涨跌方向不同的：" + "，".join(f"{c}（{pc(a_)} 对 {pc(b_)}）" for c, a_, b_ in f["flip"]) if f["flip"] else "涨跌方向都一样") + "。")
 # ---- coverage
 cov_hk = D["cov"]["hk"]; s99 = T18[(T18.cycle == "1999-06") & (T18.window == "hiking")].iloc[0]; s04 = T18[(T18.cycle == "2004-06") & (T18.window == "hiking")].iloc[0]
 t23 = CN["T23"]
@@ -556,8 +585,8 @@ coverage = (ul(["<b>美股</b>：CRSP 包含 1985 年以来在三大交易所上
                 + "（超过 100% 是因为当年新上市多于退市）。",
                 f"港股仍有少数退市公司对不上价格：1999 段约占 {s99.missing_share*100:.0f}%，2004 段约 {s04.missing_share*100:.0f}%。按最坏和最好的假设加回去，1999 段全部股票的中位数在 {pc(s99.median_worst)} 到 {pc(s99.median_best)} 之间，"
                 f"2004 段在 {pc(s04.median_worst)} 到 {pc(s04.median_best)} 之间（观测值 {pc(s04.median_observed)}）{'，最坏情况下由正转负' if s04.median_worst < 0 < s04.median_observed else ''}。",
-                "“成交活跃”的门槛换成别的数，结论会不会变：见下面的图。门槛越高，池子越像大公司。"])
-            + fig("thresh", "门槛变了，中位数股票变不变", "横轴是成交额占全市场的门槛（对数刻度），竖线是这里用的 0.02%。每条线是一段加息（加息期；1997-03 用到降息）。", wide=True, h=320)
+                "筛不筛，中位数股票差多少（加息期，1997-03 用到降息）：" + " ".join(filt_line(m) for m in MS) + "门槛从 0.01% 提到 0.10% 时，中位数变动 5 个百分点以上的段：" + "；".join(thr_line(m) for m in MS) + "。见下图。"])
+            + fig("thresh", "门槛变了，中位数股票变不变", "最左边是不设门槛（全部股票），往右门槛越来越高，竖线是这里用的 0.02%（另要求九成以上交易日有成交）。每条线是一段加息（加息期；1997-03 用到降息）。", wide=True, h=320)
             + fig("surv", "港股：缺失的退市公司加回去会怎样", "全部股票的中位数（不只是成交活跃的）。点是观测值，线的两端是最坏和最好假设。2022 段的退市在港交所 Fact Book 2021 之后，没法列举。", h=230)
             + fig("cn23", "A 股：两个数据源的中位数股票", "同一批成交活跃的股票、同一时间窗。Baostock 的复权价含分红，Compustat 的股价不含分红、总回报含分红。", wide=True, h=280)
             + '<p class="note">A 股的涨跌用 Baostock 的后复权价（处理了送转股、配股和股权分置改革对价），再用 Compustat 的分红记录去掉现金分红。没有直接用 Compustat 的复权价：1997–2006 年它对配股和股改对价的处理与 Baostock 不一致（上图）。'
@@ -565,17 +594,51 @@ coverage = (ul(["<b>美股</b>：CRSP 包含 1985 年以来在三大交易所上
               + "），所以 1994、1997、1999 三段的涨跌含现金分红。</p>")
 PAGES.append(page("coverage", "数据覆盖", "数据全不全，缺的会不会改变结论", coverage))
 
+# ---- method: the liquidity rule
+D["poolSize"] = {}
+for m in MS:
+    b = TB[m]["T19b"]; b = b[b.window == "h6m"]
+    D["poolSize"][m] = [{"c": r.cycle, "nAll": int(r.n_all), "nPool": int(r.n_pool), "share": r4(r.pool_turnover_share)} for _, r in b.iterrows()]
+ps = {m: pd.DataFrame(D["poolSize"][m]) for m in MS}
+def rng(x, f): return f"{f(x.min())}–{f(x.max())}"
+USE = [("首页、涨跌", "中位数股票、上涨股票的比例、按成交额加权的指数", POOL), ("涨跌", "指数（恒指、标普 500、上证综指）", "只用指数"),
+       ("指数走势", "14 个指数的走势和涨跌", "只用指数"), ("加息初期", "指数加息后 6 个月的涨跌", "只用指数"),
+       ("加息初期", "按成交额加权的指数", "成交活跃的股票，每月按前 90 天重新筛一次，连成 1986 年（美股）、1993 年（港股、A 股）以来的日度指数"),
+       ("行业", "各行业的中位数、跑赢次数、排序一致性", POOL), ("个股", "涨得最多和跌得最多的股票", POOL + "；港股另外去掉价格对不上的"),
+       ("推动力", "指数每周涨跌能被宏观因素解释多少", "只用指数"), ("推动力", "扣掉指数和宏观因素后的超额收益、分红的贡献", "成交活跃的股票（等权组合）"),
+       ("推动力", "什么样的股票涨得多（个股比较）", POOL), ("推动力", "港股的常见说法", "指数层面的用指数，行业和个股层面的用成交活跃的股票"),
+       ("2003–07 港股", "各地指数涨跌、周度回归、政策事件", "只用指数"), ("2003–07 港股", "盈利和估值拆解", "恒指成分股、全部 H 股"),
+       ("2003–07 港股", "谁在涨（中位数、上涨比例）", "两种都有：起点时全部上市公司，和成交活跃的股票"), ("这次加息", "1997-03 段的中位数股票", POOL),
+       ("数据覆盖", "缺失的退市公司加回去会怎样", "全部股票"), ("数据覆盖", "门槛变了，结果变不变", "门槛从不设（全部股票）到 0.10%"), ("数据覆盖", "A 股两个数据源的对照", POOL)]
+POOLSEC = ('<h2 class="sec">成交活跃的股票：怎么筛、筛掉多少、用在哪里</h2>'
+           + ul(["<b>看哪段时间</b>：每段第一次加息（F）前 90 天。",
+                 "<b>条件一，成交够多</b>：先算每只股票这 90 天里每天成交额的中位数（只算有成交的日子），再除以全市场所有股票这个数的总和。占 0.02% 以上才算。用中位数是为了不被一两天的巨量左右。",
+                 "<b>条件二，几乎天天有成交</b>：这 90 天里市场开市的日子，这只股票至少九成有成交。",
+                 "<b>基本要求</b>：第一次加息时有近期价格（港股在之前 5 个交易日内，美股、A 股在之前 12 天内），而且之前至少有 60 个交易日的价格。上市不到 60 天的新股、加息前一直停牌的股票都不算。",
+                 "<b>名单固定</b>：筛好以后整段不变，中途不换股。后来退市或停牌的照样算，按最后成交价拿到期末（美股按退市当天的收益）。",
+                 "<b>成交额怎么算</b>：美股 = 成交量 × 收盘价，纳斯达克 2004 年以前的成交量有重复计算，按学术界通用的方法折算；港股 = 成交量 × 收盘价，以港元计，美元报价按 7.8 折算；A 股用 Baostock 的成交金额，缺的用 Compustat 补。",
+                 "<b>按成交额加权的指数</b>：成交活跃的股票按成交额中位数分配权重，单只最多 5%。",
+                 f"<b>筛掉多少</b>：港股每段保留 {rng(ps['hk'].nPool, str)} 只（有价格的 {rng(ps['hk'].nAll, str)} 只里），占全市场成交额 {rng(ps['hk'].share, pct0)}；"
+                 f"美股保留 {rng(ps['us'].nPool, str)} 只（{rng(ps['us'].nAll, str)} 只里），占 {rng(ps['us'].share, pct0)}；A 股保留 {rng(ps['cn'].nPool, str)} 只（{rng(ps['cn'].nAll, str)} 只里），占 {rng(ps['cn'].share, pct0)}。"
+                 f"A 股 1994-02 段只有 {int(ps['cn'].set_index('c').loc['1994-02', 'nAll'])} 只满足基本要求，全部达标，一只没筛掉，但只占成交额的 {pct0(ps['cn'].set_index('c').loc['1994-02', 'share'])}："
+                 "剩下的成交额来自不满足基本要求的股票（新股或停牌股），它们本来就不在比较范围里。"])
+           + fig("poolSize", "每段筛掉了多少", "浅色柱是 F 那天有价格、满足基本要求的股票数，深色柱是成交活跃的股票数，柱上的百分比是成交活跃的股票占全市场成交额的比例。", wide=True, h=300)
+           + '<p>为什么要筛：成交很少的股票占了上市股票的大多数。以 2022-03 段为例，' + "，".join(f"{nm(m)}名单外的股票（筛掉的 {int(r.nAll - r.nPool):,} 只，加上新股和停牌股）合计只占成交额的 {pct0(1 - r.share)}" for m in MS for r in [ps[m].set_index("c").loc["2022-03"]])
+           + '。不筛的话，中位数说的是“一家典型的上市公司”，其中很多股票实际上很难买卖；筛了以后说的是“投资者实际能买卖的股票”。门槛换成别的数结果会不会变，见' + a("coverage", "数据覆盖") + '。</p>'
+           + '<h3 class="sub3">哪些分析用了这个筛选</h3><div class="tablewrap"><table class="use"><thead><tr><th>页面</th><th>分析</th><th>用的范围</th></tr></thead><tbody>'
+           + "".join(f"<tr><td>{esc(a_)}</td><td>{esc(b_)}</td><td>{esc(c_)}</td></tr>" for a_, b_, c_ in USE) + "</tbody></table></div>")
 # ---- method
 seg_rows = "".join(f"<tr><td>{c['id']}</td><td>{c['F']}</td><td>{('单次' if c['single'] else c['L'])}</td><td>{c['C'] or '尚未'}</td><td>{c['from']:.2f}% → {c['to']:.2f}%</td><td>{c['n']}</td></tr>" for c in D["cycles"])
 method = (ul(["<b>加息段</b>：用美联储公布的联邦基金目标利率（FRED），逐日找出每次调整。连续同方向的调整算一段，出现反向调整就另起一段，单次也成段，暂停不切段。",
               "<b>三个日期</b>：F = 第一次加息，L = 最后一次加息，C = 之后第一次降息。时间窗：前 6 个月（F 起 6 个月）、加息期（F→L）、到降息（F→C）。",
-              "<b>成交活跃的股票</b>：F 日前 90 天，日均成交额占全市场 ≥ 0.02%，且有成交的交易日 ≥ 90%。包括后来退市的股票，窗口里退市或停牌的按最后成交价拿到期末（美股按退市当天的收益）。",
+              "<b>成交活跃的股票</b>：每段第一次加息前 90 天里成交够多、又几乎天天有成交的股票，筛法和用在哪些分析里见下一节。",
               "<b>涨跌</b>：只算股价，拆股、送股已调整，不含分红（A 股 1994、1997、1999 段例外，见" + a("coverage", "数据覆盖") + "）。基准价是 F 日收盘。",
               "<b>行业</b>：全球行业分类标准（GICS）的 11 个行业，已退市公司也有行业。",
               "<b>三个比较对象</b>：指数（恒指、标普 500、上证综指）；成交活跃的股票按成交额加权（单只最多 5%）；中位数股票。",
               "<b>推动力的检验</b>：指数和组合的每周涨跌对美股、美国利率、油价、美元、人民币、本地短端利率做回归，日度回归作为复核，两种都站得住才算数；"
               "个股之间比较涨幅和各种特征（同时控制行业）；加息后 6 个月和历史上任意 6 个月比较。",
               "<b>站得住</b>：p < 0.05，或 t 的绝对值 ≥ 2。看不清的意思是数据不够下结论。"])
+          + POOLSEC
           + '<h2 class="sec">加息段</h2><div class="tablewrap"><table class="segs"><thead><tr><th>段</th><th>F 第一次加息</th><th>L 最后一次加息</th><th>C 下一次降息</th><th>目标利率</th><th>加息次数</th></tr></thead><tbody>'
           + seg_rows + "</tbody></table></div>"
           + '<h2 class="sec">三个市场的数据</h2><div class="tablewrap"><table class="src"><thead><tr><th></th><th>港股</th><th>美股</th><th>A 股</th></tr></thead><tbody>'
