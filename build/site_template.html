@@ -1,0 +1,532 @@
+<title>美联储加息与三地股市</title>
+<style>
+/* Layout: a contents rail on the left on wide screens, a top bar with a drop-down contents list on phones.
+   Reading column about 44em; figures use the full main column. One page shown at a time (hash routes). */
+:root{
+  --bg:#f5f5f1; --surface:#fcfcfa; --ink:#17191e; --ink2:#4a4d55; --muted:#7c7f87; --rule:#d9d9d1; --grid:#e8e8e2;
+  --band:#ead4ba; --band2:#f1e9de; --rate:#17191e;
+  --hk:#2a78d6; --us:#eb6834; --cn:#1baf7a;
+  --up:#c8372d; --down:#1e8a5a; --mid:#eeede8;
+  --earn:#4a3aa7; --val:#c98500; --n1:#3a3d45; --n2:#aeb1b8;
+  --serif:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","Noto Serif SC","SimSun",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",sans-serif;
+  --t-xs:12px; --t-s:13.5px; --t-m:15.5px; --t-l:19px; --t-xl:26px; --t-xxl:36px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121316; --surface:#1a1b1f; --ink:#ecece7; --ink2:#c2c2ba; --muted:#8d8e88; --rule:#303136; --grid:#26272b;
+  --band:#56412c; --band2:#2c251e; --rate:#ecece7;
+  --hk:#3987e5; --us:#d95926; --cn:#199e70;
+  --up:#e2615b; --down:#3aa877; --mid:#2a2b2f;
+  --earn:#9085e9; --val:#c98500; --n1:#d4d5da; --n2:#686b74; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121316; --surface:#1a1b1f; --ink:#ecece7; --ink2:#c2c2ba; --muted:#8d8e88; --rule:#303136; --grid:#26272b;
+  --band:#56412c; --band2:#2c251e; --rate:#ecece7;
+  --hk:#3987e5; --us:#d95926; --cn:#199e70;
+  --up:#e2615b; --down:#3aa877; --mid:#2a2b2f;
+  --earn:#9085e9; --val:#c98500; --n1:#d4d5da; --n2:#686b74; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:var(--t-m);line-height:1.7;margin:0;-webkit-text-size-adjust:100%}
+a{color:inherit;text-decoration-color:var(--muted);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif);font-weight:700;font-size:var(--t-l);text-decoration:none;letter-spacing:.02em}
+.menu{font:inherit;font-size:var(--t-s);padding:4px 12px;border:1px solid var(--rule);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.app{display:grid;grid-template-columns:1fr;max-width:1240px;margin:0 auto}
+.rail{display:none;flex-direction:column;padding:8px 16px 16px;border-bottom:1px solid var(--rule);background:var(--bg)}
+.rail.open{display:flex}
+.rail a{padding:7px 10px;border-radius:6px;text-decoration:none;color:var(--ink2);font-size:var(--t-s)}
+.rail a[aria-current="page"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--ink)}
+main{min-width:0;padding-inline:16px;padding-block:8px 48px}
+@media (min-width:1000px){
+  .app{grid-template-columns:190px minmax(0,1fr);gap:24px}
+  .menu{display:none}
+  .rail{display:flex;position:sticky;top:56px;align-self:start;border:0;padding:24px 0 24px 16px;max-height:calc(100vh - 56px);overflow:auto}
+  main{padding-inline:8px 24px}
+}
+.page{max-width:900px}
+.ptitle{font-family:var(--serif);font-weight:700;font-size:var(--t-xl);line-height:1.35;margin:28px 0 14px;text-wrap:balance}
+.ptitle .q{font-weight:400}
+.hero{padding:28px 0 6px}
+.kicker{font-size:var(--t-s);letter-spacing:.08em;color:var(--muted);margin:0}
+.site{font-family:var(--serif);font-size:clamp(26px,8vw,36px);line-height:1.25;margin:6px 0 10px;letter-spacing:.02em}
+.hlede{font-size:var(--t-l);line-height:1.65;color:var(--ink2);max-width:40em;margin:0 0 6px}
+.stamp,.note,.how,.read{color:var(--ink2)}
+h2.sec{font-family:var(--serif);font-size:var(--t-l);margin:34px 0 8px;text-wrap:balance}
+p{max-width:44em}
+.keys{padding-left:1.1em;margin:8px 0 20px;max-width:46em}
+.keys li{margin:6px 0}
+.findings{counter-reset:f;list-style:none;padding:0;margin:8px 0 18px;display:grid;gap:10px;max-width:48em}
+.findings li{counter-increment:f;position:relative;padding:12px 14px 12px 46px;background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+.findings li::before{content:counter(f);position:absolute;left:14px;top:11px;font-family:var(--serif);font-weight:700;font-size:var(--t-l);color:var(--muted)}
+.findings a,.keys a{white-space:nowrap;margin-left:6px;font-size:var(--t-s)}
+.terms{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 18px;max-width:48em;margin:8px 0}
+.terms dt{font-weight:600}
+.terms dd{margin:0;color:var(--ink2)}
+@media (max-width:560px){.terms{grid-template-columns:1fr}.terms dd{margin-bottom:8px}}
+.fig{margin:22px 0 26px;padding:14px 14px 10px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;min-width:0}
+.fig figcaption b{display:block;font-size:var(--t-m);margin-bottom:2px}
+.fig .how{display:block;font-size:var(--t-s);line-height:1.6}
+.fig .read{font-size:var(--t-s);margin:8px 0 0}
+.chart{position:relative;margin-top:8px;min-height:var(--h,260px)}
+.chart.drawn{min-height:0}
+.nojs{color:var(--muted);font-size:var(--t-s)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px 14px;margin:4px 0 8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:var(--t-s);padding:3px 11px;border:0;border-right:1px solid var(--rule);background:transparent;color:var(--ink2);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-xs);color:var(--ink2);margin-bottom:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend i.dot{border-radius:50%}
+.legend i.ring{border-radius:50%;background:transparent!important;border:1.5px solid var(--ink2)}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;width:16px;vertical-align:3px}
+.plot{position:relative;min-width:0}
+.plot.scroll{overflow-x:auto}
+.plot svg{display:block;max-width:none;font-family:var(--sans)}
+.plot svg text{fill:var(--ink2);font-size:11px}
+.plot svg .ax{fill:var(--muted)}
+.plot svg .lab{fill:var(--ink);font-weight:600}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.panel h4{margin:0;font-size:var(--t-s);font-weight:600}
+.panel p{margin:0 0 4px;font-size:var(--t-xs);color:var(--ink2)}
+.hrows{display:grid;gap:3px}
+.hrow{display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr) 4.6em;gap:10px;align-items:center;font-size:var(--t-s);padding:2px 0}
+.hrow .lab{min-width:0;line-height:1.3}
+.hrow .nm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .cd{display:block;font-size:var(--t-xs);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .track{position:relative;height:16px}
+.hrow .bar{position:absolute;top:2px;height:12px;border-radius:2px}
+.hrow .zero{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.hrow .ref{position:absolute;top:-2px;bottom:-2px;border-left:1px dashed var(--muted)}
+.hrow .val{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.hrow{grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 4.2em;gap:6px}}
+.sub{font-size:var(--t-s);color:var(--ink2);margin:2px 0 8px}
+.tablewrap{overflow-x:auto;margin:10px 0 18px}
+table{border-collapse:collapse;font-size:var(--t-s);font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+thead th{font-weight:600;color:var(--ink2);border-bottom:1.5px solid var(--ink2);white-space:nowrap}
+td.small{font-size:var(--t-xs);color:var(--ink2);min-width:16em}
+table.hyp td:nth-child(2){min-width:12em}
+.vd{display:inline-block;padding:1px 8px;border-radius:999px;font-size:var(--t-xs);line-height:1.6;border:1px solid var(--rule);background:var(--bg)}
+.vd.yes{border-color:var(--up);color:var(--up)}
+.vd.part{border-color:var(--val);color:var(--ink)}
+.vd.no{border-color:var(--down);color:var(--down)}
+.vd.unclear{color:var(--muted)}
+table.events td:nth-child(1),table.events td:nth-child(3){white-space:nowrap}
+table.events tr.hi td:last-child{color:var(--up);font-weight:600}
+table.events tr.lo td:last-child{color:var(--down);font-weight:600}
+table.xs td,table.xs thead th{text-align:center;padding:4px 3px;min-width:27px}
+table.xs th.f{text-align:left;white-space:nowrap}
+table.xs td.pos{color:var(--up);font-weight:700}
+table.xs td.neg{color:var(--down);font-weight:700}
+table.xs td.ns{color:var(--muted)}
+table.xs td.sum{white-space:nowrap;color:var(--ink2);text-align:left}
+table.rob td{min-width:9em}
+.mk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.err{color:var(--up);font-size:var(--t-s)}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:36px;padding-top:14px;border-top:1px solid var(--rule);font-size:var(--t-s)}
+.pager a{text-decoration:none}
+.pager a span{display:block;color:var(--muted);font-size:var(--t-xs)}
+.foot{max-width:900px;margin-top:20px;font-size:var(--t-xs);color:var(--muted)}
+#tip{position:fixed;z-index:50;max-width:300px;padding:8px 10px;background:var(--ink);color:var(--bg);border-radius:6px;font-size:var(--t-xs);line-height:1.55;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#tip b{font-weight:700}
+@media (prefers-reduced-motion:no-preference){.seg button{transition:background .12s}}
+</style>
+<!--HEAD-END-->
+<div class="top"><a class="brand" href="#home">美联储加息与三地股市</a><button class="menu" type="button" aria-expanded="false" aria-controls="nav">目录</button></div>
+<div class="app">
+<nav class="rail" id="nav" aria-label="目录">{{NAV}}</nav>
+<main id="main">
+{{PAGES}}
+<p class="foot">结论和数字来自 2026-09-24 生成的结果表；网站生成于 {{BUILT}}。个股数据：美股 CRSP，港股 Compustat Global，A 股 Baostock；利率和指数：FRED、Yahoo、新浪。</p>
+</main>
+</div>
+<div id="tip" role="tooltip" hidden></div>
+<script id="data" type="application/json">{{DATA}}</script>
+<script>
+(function(){
+"use strict";
+var D = JSON.parse(document.getElementById("data").textContent);
+var MS = ["hk","us","cn"], MN = {hk:"港股", us:"美股", cn:"A 股"}, IX = {hk:"恒指", us:"标普 500", cn:"上证综指"};
+var WN = {h6m:"前 6 个月", hiking:"加息期", to_cut:"到降息"};
+var CYC = {}; D.cycles.forEach(function(c){ CYC[c.id] = c; });
+var ANAL = D.cycles.filter(function(c){ return c.C; }).map(function(c){ return c.id; });
+var SVGNS = "http://www.w3.org/2000/svg";
+
+/* ---------- small helpers ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
+function fp(v, d){ if (v == null || isNaN(v)) return "—"; d = d || 0; return (v < 0 ? "−" : "+") + Math.abs(v * 100).toFixed(d) + "%"; }
+function fpp(v, d){ if (v == null || isNaN(v)) return "—"; d = d == null ? 1 : d; var a = Math.abs(v).toFixed(d); if (+a === 0) return (0).toFixed(d); return (v < 0 ? "−" : "+") + a; }
+function fpl(v){ return (v * 100).toFixed(0) + "%"; }
+function S(tag, at, parent){ var e = document.createElementNS(SVGNS, tag); for (var k in at) if (at[k] != null) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; }
+function T(parent, x, y, str, at){ var t = S("text", Object.assign({x: x, y: y}, at || {}), parent); t.textContent = str; return t; }
+function H(tag, at, html){ var e = document.createElement(tag); for (var k in at || {}) if (at[k] != null) e.setAttribute(k, at[k]); if (html != null) e.innerHTML = html; return e; }
+function lin(d0, d1, r0, r1){ var f = function(v){ return r0 + (v - d0) / (d1 - d0) * (r1 - r0); }; return f; }
+function ticks(lo, hi, n){ var span = hi - lo, st0 = span / (n || 5), mag = Math.pow(10, Math.floor(Math.log10(st0))), e = st0 / mag;
+  var st = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag, out = []; for (var v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) out.push(+v.toFixed(10)); return out; }
+function svgBox(w, h){ return S("svg", {viewBox: "0 0 " + w + " " + h, width: w, height: h, role: "img"}); }
+function cvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function hex2rgb(h){ h = h.replace("#",""); if (h.length === 3) h = h.split("").map(function(c){ return c + c; }).join(""); var n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t){ var A = hex2rgb(a), B = hex2rgb(b); return "rgb(" + A.map(function(x, i){ return Math.round(x + (B[i] - x) * t); }).join(",") + ")"; }
+function lum(rgb){ var m = rgb.match(/\d+/g).map(Number).map(function(c){ c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }); return .2126 * m[0] + .7152 * m[1] + .0722 * m[2]; }
+function divColor(v, cap){ var t = Math.min(1, Math.abs(v) / cap); return mix(cvar("--mid"), v >= 0 ? cvar("--up") : cvar("--down"), Math.pow(t, .8)); }
+function inkOn(fill){ return lum(fill) < .28 ? "#ffffff" : cvar("--ink"); }
+function MC(m){ return "var(--" + m + ")"; }
+function wfor(w, c){ return (w === "hiking" && CYC[c].single) ? "to_cut" : w; }
+function poolRow(m, c, w){ for (var i = 0; i < D.pool.length; i++){ var r = D.pool[i]; if (r.m === m && r.c === c && r.w === w) return r; } return null; }
+function yr(c){ return c.slice(0, 4); }
+function hOf(el, dflt){ var v = parseFloat(getComputedStyle(el).getPropertyValue("--h")); return isNaN(v) ? dflt : v; }
+
+/* ---------- tooltip ---------- */
+var tip = document.getElementById("tip"), tipOn = null;
+function place(x, y){ var r = tip.getBoundingClientRect(), L = x + 14, Tp = y + 14;
+  if (L + r.width > innerWidth - 8) L = x - r.width - 14; if (L < 8) L = 8; if (Tp + r.height > innerHeight - 8) Tp = y - r.height - 14; if (Tp < 8) Tp = 8;
+  tip.style.left = L + "px"; tip.style.top = Tp + "px"; }
+function tipFor(e){ return e.target && e.target.closest ? e.target.closest("[data-tip]") : null; }
+document.addEventListener("pointermove", function(e){ var t = tipFor(e);
+  if (t){ if (t !== tipOn){ tipOn = t; tip.innerHTML = t.getAttribute("data-tip"); tip.hidden = false; } place(e.clientX, e.clientY); }
+  else if (tipOn && e.pointerType === "mouse"){ tipOn = null; tip.hidden = true; } });
+document.addEventListener("pointerdown", function(e){ var t = tipFor(e);
+  if (!t){ tipOn = null; tip.hidden = true; return; } tipOn = t; tip.innerHTML = t.getAttribute("data-tip"); tip.hidden = false; place(e.clientX, e.clientY); });
+document.addEventListener("scroll", function(){ if (tipOn){ tipOn = null; tip.hidden = true; } }, {passive: true});
+
+/* ---------- chart framework ---------- */
+var R = {};
+function segc(st, key, opts){ var g = H("div", {"class": "seg", role: "group"});
+  opts.forEach(function(o){ var b = H("button", {type: "button", "aria-pressed": String(st[key] === o[0])}, esc(o[1]));
+    b.addEventListener("click", function(){ if (st[key] === o[0]) return; st[key] = o[0]; g.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); }); st.rep(); });
+    g.appendChild(b); });
+  st.ctl.appendChild(g); return g; }
+function legend(st, items){ st.leg.innerHTML = items.map(function(it){ return '<span><i class="' + (it.cls || "") + '" style="background:' + it.c + '"></i>' + esc(it.t) + "</span>"; }).join(""); }
+function draw(el){ var id = el.getAttribute("data-c"), r = R[id]; if (!r) return;
+  try {
+    if (!el._st){ el.innerHTML = ""; var st = el._st = {el: el}; st.ctl = H("div", {"class": "ctrls"}); st.leg = H("div", {"class": "legend"}); st.plot = H("div", {"class": "plot"});
+      el.appendChild(st.ctl); el.appendChild(st.leg); el.appendChild(st.plot); st.rep = function(){ r.paint(el, st); }; if (r.init) r.init(el, st);
+      if (!st.ctl.childNodes.length) st.ctl.remove(); }
+    r.paint(el, el._st); el._w = el.clientWidth; el.classList.add("drawn");
+  } catch (err){ el.innerHTML = '<p class="err">这张图没画出来：' + esc(err.message) + "</p>"; if (window.console) console.error(err); } }
+function plotW(st){ return Math.max(300, st.plot.clientWidth || st.el.clientWidth || 600); }
+
+/* vertical grouped bars. cats: [{k, label}], series: [{name, color, get(k), tip(k,v)}] */
+function vbars(st, o){
+  var w = plotW(st), h = o.h, m = {l: 44, r: 8, t: 20, b: o.b || 30}, svg = svgBox(w, h), vals = [];
+  o.cats.forEach(function(c){ o.series.forEach(function(s){ var v = s.get(c.k); if (v != null) vals.push(v); }); });
+  var lo = o.lo != null ? o.lo : Math.min(0, Math.min.apply(null, vals)), hi = o.hi != null ? o.hi : Math.max(0, Math.max.apply(null, vals));
+  if (o.lo == null && lo < 0) lo -= (hi - lo) * .06; if (o.hi == null) hi += (hi - lo) * .08;
+  var y = lin(lo, hi, h - m.b, m.t), fmt = o.fmt || function(t){ return fpl(t); };
+  ticks(lo, hi, 5).forEach(function(t){ S("line", {x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 6, y(t) + 4, fmt(t), {"text-anchor": "end", "class": "ax"}); });
+  var bw = (w - m.l - m.r) / o.cats.length, inner = Math.min(bw * .8, o.series.length * 40), sb = inner / o.series.length;
+  o.cats.forEach(function(c, i){
+    var x0 = m.l + i * bw + (bw - inner) / 2;
+    o.series.forEach(function(s, j){ var v = s.get(c.k); if (v == null) return; var x = x0 + j * sb, y0 = y(0), y1 = y(v);
+      S("rect", {x: x + 1, y: Math.min(y0, y1), width: Math.max(1, sb - 2), height: Math.max(1, Math.abs(y1 - y0)), rx: 1.5, style: "fill:" + s.color, "data-tip": s.tip(c.k, v)}, svg);
+      if (o.labels !== false && sb >= 23){ var lab = (o.lab || function(v){ return fp(v); })(v); if (sb < 34) lab = lab.replace("%", "");
+        T(svg, x + sb / 2, v >= 0 ? y1 - 4 : y1 + 12, lab, {"text-anchor": "middle", style: "font-size:10px"}); } });
+    var lb = c.label; if (/^\d{4}-\d{2}$/.test(lb) && bw < 52) lb = bw < 36 ? "'" + lb.slice(2, 4) : lb.slice(0, 4);
+    T(svg, m.l + i * bw + bw / 2, h - m.b + 16, lb, {"text-anchor": "middle", "class": c.strong ? "lab" : null});
+    if (c.sub && bw >= 64) T(svg, m.l + i * bw + bw / 2, h - m.b + 28, c.sub, {"text-anchor": "middle", "class": "ax", style: "font-size:10px"}); });
+  if (bw < 64 && o.cats.some(function(c){ return c.sub; })) T(svg, m.l, h - 4, o.cats.filter(function(c){ return c.sub; }).map(function(c){ return c.label.slice(0, 4) + " " + c.sub; }).join("；"), {"class": "ax", style: "font-size:10px"});
+  S("line", {x1: m.l, x2: w - m.r, y1: y(0), y2: y(0), style: "stroke:var(--muted)"}, svg);
+  if (o.ref != null) S("line", {x1: m.l, x2: w - m.r, y1: y(o.ref), y2: y(o.ref), style: "stroke:var(--muted);stroke-dasharray:4 4"}, svg);
+  st.plot.replaceChildren(svg); return svg; }
+
+/* horizontal bar rows in HTML (text-heavy rankings) */
+function hrows(st, rows, o){
+  var vals = rows.map(function(r){ return r.v; }), lo = Math.min(0, Math.min.apply(null, vals)), hi = Math.max(o.hiMin || 0, Math.max.apply(null, vals));
+  if (o.lo != null) lo = o.lo; if (o.hi != null) hi = o.hi; var sp = hi - lo || 1, z = (0 - lo) / sp * 100;
+  var html = '<div class="hrows">' + rows.map(function(r){ var a = (Math.min(0, r.v) - lo) / sp * 100, b = (Math.max(0, r.v) - lo) / sp * 100;
+    return '<div class="hrow" data-tip="' + esc(r.tip) + '"><div class="lab"><span class="nm">' + esc(r.name) + "</span>" + (r.sub ? '<span class="cd">' + esc(r.sub) + "</span>" : "") +
+      '</div><div class="track">' + (o.ref != null ? '<span class="ref" style="left:' + ((o.ref - lo) / sp * 100) + '%"></span>' : "") +
+      '<span class="bar" style="left:' + a + "%;width:" + Math.max(.4, b - a) + "%;background:" + r.color + '"></span><span class="zero" style="left:' + z + '%"></span></div><div class="val">' + esc(r.label) + "</div></div>"; }).join("") + "</div>";
+  st.plot.innerHTML = html; }
+
+/* ---------- 1. Fed target rate and hiking bands ---------- */
+R.fed = {paint: function(el, st){
+  var w = plotW(st), h = hOf(el, 250), m = {l: 34, r: 10, t: 40, b: 24}, svg = svgBox(w, h);
+  var t0 = Date.parse("1985-01-01"), t1 = Date.parse("2027-06-30"), x = lin(t0, t1, m.l, w - m.r), y = lin(0, 11, h - m.b, m.t);
+  [0, 2, 4, 6, 8, 10].forEach(function(v){ S("line", {x1: m.l, x2: w - m.r, y1: y(v), y2: y(v), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 6, y(v) + 4, v + "%", {"text-anchor": "end", "class": "ax"}); });
+  for (var Y = 1985; Y <= 2025; Y += 5) T(svg, x(Date.parse(Y + "-01-01")), h - 6, String(Y), {"text-anchor": "middle", "class": "ax"});
+  var row = 0;
+  D.fed.segs.filter(function(s){ return s.dir === "hike"; }).forEach(function(s){
+    var a = x(Date.parse(s.F)), b = Math.max(x(Date.parse(s.L)), a + 3), cur = !s.next;
+    var tipTxt = "<b>" + s.id + " 段</b>" + (s.analysed ? "" : "（未分析）") + "<br>" + s.F + (s.n > 1 ? " 至 " + s.L : "（只加一次）") + "，加息 " + s.n + " 次<br>目标利率 " + s.from.toFixed(2) + "% → " + s.to.toFixed(2) + "%" + (s.next ? "<br>下一次降息 " + s.next : "<br>刚开始");
+    S("rect", {x: a, y: m.t - 6, width: b - a, height: h - m.b - m.t + 6, style: "fill:" + (s.analysed || cur ? "var(--band)" : "var(--band2)"), "data-tip": tipTxt}, svg);
+    if (s.analysed || cur){ var ly = m.t - 12 - (row % 2) * 13; row++; var lab = w < 640 ? "'" + s.id.slice(2, 4) : s.id + (cur ? " 刚开始" : ""), cx = (a + b) / 2, anc = "middle";
+      if (cx + lab.length * 3.5 > w - 2){ cx = b; anc = "end"; }
+      T(svg, cx, ly, lab, {"text-anchor": anc, "class": "lab", style: "font-size:10.5px"}); } });
+  var d = "", p = D.fed.pts;
+  p.forEach(function(q, i){ var X = x(Date.parse(q[0])), Yv = y(q[1]); d += (i ? "H" + X.toFixed(1) + "V" + Yv.toFixed(1) : "M" + X.toFixed(1) + " " + Yv.toFixed(1)); });
+  S("path", {d: d, style: "fill:none;stroke:var(--rate);stroke-width:1.6"}, svg);
+  var last = p[p.length - 1]; T(svg, x(Date.parse(last[0])) - 6, y(last[1]) + 18, "现在 " + last[1].toFixed(2) + "%", {"text-anchor": "end", "class": "lab"});
+  st.plot.replaceChildren(svg); }};
+
+/* ---------- 2. pool medians by market ---------- */
+R.poolMain = {init: function(el, st){ st.w = "hiking"; segc(st, "w", [["h6m", "前 6 个月"], ["hiking", "加息期"], ["to_cut", "到降息"]]);
+    legend(st, MS.map(function(m){ return {c: MC(m), t: MN[m]}; })); },
+  paint: function(el, st){ var w = st.w;
+    vbars(st, {h: hOf(el, 300), b: 40, cats: ANAL.map(function(c){ var sw = wfor(w, c) !== w; return {k: c, label: c, sub: sw ? "用到降息" : (c < "1994" ? "只有美股" : null)}; }),
+      series: MS.map(function(m){ return {color: MC(m), get: function(c){ var r = poolRow(m, c, wfor(w, c)); return r ? r.med : null; },
+        tip: function(c, v){ var r = poolRow(m, c, wfor(w, c)); return "<b>" + MN[m] + " " + c + " 段 · " + WN[wfor(w, c)] + "</b><br>中位数股票 " + fp(v) + "<br>上涨的股票 " + fpl(r.up) + "（共 " + r.n + " 只）<br>" + IX[m] + " " + fp(r.idx) + "，按成交额加权 " + fp(r.tw); }}; })}); }};
+
+/* ---------- 3. spread within a segment ---------- */
+R.spread = {init: function(el, st){ legend(st, MS.map(function(m){ return {c: MC(m), t: MN[m], cls: "dot"}; })); },
+  paint: function(el, st){
+    var rows = ANAL.filter(function(c){ return MS.every(function(m){ return poolRow(m, c, wfor("hiking", c)); }); });
+    var w = plotW(st), rh = 34, nar = w < 520, m = {l: 64, r: nar ? 52 : 120, t: 14, b: 26}, h = m.t + m.b + rh * rows.length, svg = svgBox(w, h), vals = [];
+    rows.forEach(function(c){ MS.forEach(function(mk){ vals.push(poolRow(mk, c, wfor("hiking", c)).med); }); });
+    var lo = Math.min(0, Math.min.apply(null, vals)) - .05, hi = Math.max(0, Math.max.apply(null, vals)) + .05, x = lin(lo, hi, m.l, w - m.r);
+    ticks(lo, hi, 6).forEach(function(t){ S("line", {x1: x(t), x2: x(t), y1: m.t, y2: h - m.b, style: "stroke:var(--grid)"}, svg); T(svg, x(t), h - 8, fpl(t), {"text-anchor": "middle", "class": "ax"}); });
+    S("line", {x1: x(0), x2: x(0), y1: m.t, y2: h - m.b, style: "stroke:var(--muted)"}, svg);
+    rows.forEach(function(c, i){ var yy = m.t + rh * i + rh / 2, v = {}; MS.forEach(function(mk){ v[mk] = poolRow(mk, c, wfor("hiking", c)).med; });
+      var mn = Math.min(v.hk, v.us, v.cn), mx = Math.max(v.hk, v.us, v.cn);
+      T(svg, m.l - 10, yy + 4, c, {"text-anchor": "end", "class": "lab"});
+      S("line", {x1: x(mn), x2: x(mx), y1: yy, y2: yy, style: "stroke:var(--n2);stroke-width:3;stroke-linecap:round"}, svg);
+      MS.forEach(function(mk){ S("circle", {cx: x(v[mk]), cy: yy, r: 6.5, style: "fill:" + MC(mk) + ";stroke:var(--surface);stroke-width:2", "data-tip": "<b>" + MN[mk] + " " + c + "</b><br>" + WN[wfor("hiking", c)] + " 中位数股票 " + fp(v[mk])}, svg); });
+      T(svg, w - m.r + 10, yy + 4, nar ? "差 " + Math.round((mx - mn) * 100) : "相差 " + Math.round((mx - mn) * 100) + " 个百分点", {"class": "ax"}); });
+    st.plot.replaceChildren(svg); }};
+
+/* ---------- 4. index vs weighted vs median ---------- */
+R.bench = {init: function(el, st){ st.m = "hk"; st.w = "hiking"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); segc(st, "w", [["h6m", "前 6 个月"], ["hiking", "加息期"], ["to_cut", "到降息"]]); },
+  paint: function(el, st){ var mk = st.m, w = st.w;
+    legend(st, [{c: "var(--n1)", t: IX[mk]}, {c: "var(--n2)", t: "成交活跃的股票按成交额加权"}, {c: MC(mk), t: "中位数股票"}]);
+    var cats = ANAL.filter(function(c){ return poolRow(mk, c, wfor(w, c)); }).map(function(c){ return {k: c, label: c, sub: wfor(w, c) !== w ? "用到降息" : null}; });
+    var g = function(key){ return function(c){ var r = poolRow(mk, c, wfor(w, c)); return r ? r[key] : null; }; };
+    var tp = function(c){ var r = poolRow(mk, c, wfor(w, c)); return "<b>" + MN[mk] + " " + c + " 段 · " + WN[wfor(w, c)] + "</b><br>" + IX[mk] + " " + fp(r.idx) + "<br>按成交额加权 " + fp(r.tw) + "<br>中位数股票 " + fp(r.med) + "<br>加权减中位数 " + fpp((r.tw - r.med) * 100, 0) + " 个百分点"; };
+    vbars(st, {h: hOf(el, 300), b: 40, cats: cats, series: [{color: "var(--n1)", get: g("idx"), tip: tp}, {color: "var(--n2)", get: g("tw"), tip: tp}, {color: MC(mk), get: g("med"), tip: tp}]}); }};
+
+/* ---------- 5. share of stocks that rose ---------- */
+R.breadth = {init: function(el, st){ st.w = "hiking"; segc(st, "w", [["h6m", "前 6 个月"], ["hiking", "加息期"], ["to_cut", "到降息"]]);
+    legend(st, MS.map(function(m){ return {c: MC(m), t: MN[m]}; }).concat([{cls: "dash", c: "transparent", t: "一半"}])); },
+  paint: function(el, st){ var w = st.w;
+    vbars(st, {h: hOf(el, 260), b: 40, lo: 0, hi: 1, ref: .5, lab: function(v){ return fpl(v); }, cats: ANAL.map(function(c){ return {k: c, label: c, sub: wfor(w, c) !== w ? "用到降息" : null}; }),
+      series: MS.map(function(m){ return {color: MC(m), get: function(c){ var r = poolRow(m, c, wfor(w, c)); return r ? r.up : null; },
+        tip: function(c, v){ var r = poolRow(m, c, wfor(w, c)); return "<b>" + MN[m] + " " + c + " · " + WN[wfor(w, c)] + "</b><br>上涨的股票 " + fpl(v) + "（共 " + r.n + " 只）"; }}; })}); }};
+
+/* ---------- 6. index paths ---------- */
+function linePlot(st, h, series, o){
+  var w = plotW(st), m = {l: 44, r: o.r || 64, t: 14, b: 30}, svg = svgBox(w, h), xs = [], ys = [];
+  series.forEach(function(s){ s.pts.forEach(function(p){ xs.push(p[0]); ys.push(p[1]); }); });
+  var x = lin(0, Math.max.apply(null, xs), m.l, w - m.r), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys), pad = (hi - lo) * .06; lo -= pad; hi += pad;
+  var y = lin(lo, hi, h - m.b, m.t);
+  ticks(lo, hi, 5).forEach(function(t){ S("line", {x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 6, y(t) + 4, String(t), {"text-anchor": "end", "class": "ax"}); });
+  ticks(0, Math.max.apply(null, xs), w < 520 ? 4 : 8).forEach(function(t){ T(svg, x(t), h - 10, w < 520 ? String(t) : t + " 个月", {"text-anchor": "middle", "class": "ax"}); });
+  S("line", {x1: m.l, x2: w - m.r, y1: y(100), y2: y(100), style: "stroke:var(--muted)"}, svg);
+  series.slice().sort(function(a, b){ return (a.hl ? 1 : 0) - (b.hl ? 1 : 0); }).forEach(function(s){
+    var d = s.pts.map(function(p, i){ return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1); }).join("");
+    S("path", {d: d, style: "fill:none;stroke:" + s.color + ";stroke-width:" + (s.hl ? 2.4 : 1.2) + ";stroke-linejoin:round;opacity:" + (s.hl || !o.dim ? 1 : .55)}, svg);
+    S("path", {d: d, style: "fill:none;stroke:transparent;stroke-width:12;cursor:pointer", "data-tip": s.tip, "data-k": s.k}, svg).addEventListener("click", function(){ if (o.pick) o.pick(s.k); });
+    if (s.L) S("circle", {cx: x(s.L[0]), cy: y(s.L[1]), r: s.hl ? 4.5 : 3, style: "fill:" + s.color + ";stroke:var(--surface);stroke-width:1.5"}, svg);
+    var e = s.pts[s.pts.length - 1]; if (s.hl || o.labelAll) T(svg, x(e[0]) + 5, y(e[1]) + 4, s.name + " " + Math.round(e[1]), {"class": s.hl ? "lab" : null}); });
+  st.plot.replaceChildren(svg); }
+R.paths = {init: function(el, st){ st.m = "hk"; st.sel = "2022-03"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); st.chips = H("div", {"class": "seg"}); st.ctl.appendChild(st.chips); },
+  paint: function(el, st){ var mk = st.m, P = D.paths[mk], keys = ANAL.filter(function(c){ return P[c]; }); if (keys.indexOf(st.sel) < 0) st.sel = keys[keys.length - 1];
+    st.chips.innerHTML = ""; keys.forEach(function(c){ var b = H("button", {type: "button", "aria-pressed": String(c === st.sel)}, c); b.addEventListener("click", function(){ st.sel = c; st.rep(); }); st.chips.appendChild(b); });
+    legend(st, [{c: MC(mk), t: "选中的一段"}, {c: "var(--n2)", t: "其他各段"}, {c: MC(mk), cls: "dot", t: "最后一次加息"}]);
+    linePlot(st, hOf(el, 340), keys.map(function(c){ var p = P[c], e = p.pts[p.pts.length - 1];
+      return {k: c, name: c, pts: p.pts, L: p.L, hl: c === st.sel, color: c === st.sel ? MC(mk) : "var(--n2)",
+        tip: "<b>" + IX[mk] + " · " + c + " 段</b><br>" + (p.L ? "最后一次加息时 " + fp(p.L[1] / 100 - 1) + "<br>" : "只加一次<br>") + "到下一次降息（" + CYC[c].C + "）" + fp(e[1] / 100 - 1)}; }),
+      {dim: true, pick: function(k){ st.sel = k; st.rep(); }}); }};
+
+/* ---------- 7. first six months ---------- */
+R.early = {init: function(el, st){ legend(st, [{c: "var(--n1)", t: "指数"}, {c: "var(--ink2)", cls: "dot", t: "成交活跃的股票按成交额加权"}, {c: "transparent", cls: "dash", t: "平时任意 6 个月的中位数"}]); },
+  paint: function(el, st){ var wrap = H("div", {"class": "panels"});
+    MS.forEach(function(mk){ var e = D.early[mk], pan = H("div", {"class": "panel"});
+      pan.appendChild(H("h4", {}, MN[mk] + "：" + IX[mk] + "跌了 " + e.idx.neg + "/" + e.idx.n + " 段"));
+      pan.appendChild(H("p", {}, "平时 6 个月下跌的比例 " + fpl(e.idx.base) + "，" + (e.idx.p < .01 ? "p<0.01" : "p=" + e.idx.p.toFixed(2)) + (Math.min(e.idx.p, e.pool.p) < .05 ? "，和平时有差别" : "，看不出差别")));
+      var box = H("div", {}); pan.appendChild(box); wrap.appendChild(pan);
+      var pmap = {}; e.pool.rows.forEach(function(r){ pmap[r.c] = r.v; });
+      box.style.width = "100%";
+      pan._draw = function(){ var w = Math.max(240, box.clientWidth), h = hOf(el, 280) - 40, m = {l: 40, r: 6, t: 14, b: 26}, svg = svgBox(w, h);
+        var vals = e.idx.rows.map(function(r){ return r.v; }).concat(e.pool.rows.map(function(r){ return r.v; })).concat([e.idx.medAll, 0]);
+        var lo = Math.min.apply(null, vals) - .04, hi = Math.max.apply(null, vals) + .04, y = lin(lo, hi, h - m.b, m.t);
+        ticks(lo, hi, 4).forEach(function(t){ S("line", {x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 5, y(t) + 4, fpl(t), {"text-anchor": "end", "class": "ax"}); });
+        var n = e.idx.rows.length, bw = (w - m.l - m.r) / n;
+        e.idx.rows.forEach(function(r, i){ var xx = m.l + i * bw, y0 = y(0), y1 = y(r.v);
+          S("rect", {x: xx + bw * .18, y: Math.min(y0, y1), width: bw * .64, height: Math.max(1, Math.abs(y1 - y0)), rx: 1.5, style: "fill:var(--n1)", "data-tip": "<b>" + IX[mk] + " " + r.c + "</b><br>加息后 6 个月 " + fp(r.v) + "<br>在所有 6 个月里排第 " + Math.round(r.pctile * 100) + " 百分位"}, svg);
+          T(svg, xx + bw / 2, h - 8, "'" + r.c.slice(2, 4), {"text-anchor": "middle", "class": "ax"});
+          if (pmap[r.c] != null) S("circle", {cx: xx + bw / 2, cy: y(pmap[r.c]), r: 4, style: "fill:var(--ink2);stroke:var(--surface);stroke-width:1.5", "data-tip": "<b>" + MN[mk] + "成交活跃的股票 " + r.c + "</b><br>按成交额加权 " + fp(pmap[r.c])}, svg); });
+        S("line", {x1: m.l, x2: w - m.r, y1: y(0), y2: y(0), style: "stroke:var(--muted)"}, svg);
+        S("line", {x1: m.l, x2: w - m.r, y1: y(e.idx.medAll), y2: y(e.idx.medAll), style: "stroke:var(--muted);stroke-dasharray:4 4"}, svg);
+        box.replaceChildren(svg); }; });
+    st.plot.replaceChildren(wrap); wrap.childNodes.forEach(function(p){ p._draw(); }); }};
+
+/* ---------- 8. sectors ---------- */
+function heat(st, o){
+  var cols = o.cols, rows = o.rows, lw = o.lw || 82, avail = plotW(st) - lw - 8, cw = Math.max(o.cmin || 34, Math.min(o.cmax || 58, avail / cols.length)), ch = o.ch || 26, top = o.top || 34;
+  var w = lw + cw * cols.length + 4, h = top + ch * rows.length + 4, svg = svgBox(w, h);
+  cols.forEach(function(c, j){ if (c.group) { T(svg, lw + cw * j + 2, 12, c.group, {"class": "lab"}); if (c.gcolor) S("rect", {x: lw + cw * j + 2, y: 15, width: cw * c.gspan - 6, height: 2, style: "fill:" + c.gcolor}, svg); }
+    T(svg, lw + cw * j + cw / 2, top - 6, c.label, {"text-anchor": "middle", "class": "ax"}); });
+  rows.forEach(function(r, i){ var yy = top + ch * i;
+    T(svg, lw - 8, yy + ch / 2 + 4, r.label, {"text-anchor": "end", "class": r.strong ? "lab" : null});
+    cols.forEach(function(c, j){ var cell = o.cell(r, c); if (!cell) return; var fill = divColor(cell.v, o.cap);
+      S("rect", {x: lw + cw * j + 1, y: yy + 1, width: cw - 2, height: ch - 2, rx: 2, style: "fill:" + fill, "data-tip": cell.tip}, svg);
+      T(svg, lw + cw * j + cw / 2, yy + ch / 2 + (cell.small ? 1 : 4), cell.text, {"text-anchor": "middle", style: "font-size:10.5px;pointer-events:none;fill:" + inkOn(fill)});
+      if (cell.small && ch >= 30) T(svg, lw + cw * j + cw / 2, yy + ch / 2 + 12, cell.small, {"text-anchor": "middle", style: "font-size:8.5px;pointer-events:none;opacity:.8;fill:" + inkOn(fill)}); }); });
+  st.plot.classList.add("scroll"); st.plot.replaceChildren(svg); }
+R.secRel = {init: function(el, st){ legend(st, [{c: "var(--up)", t: "跑赢本市场"}, {c: "var(--down)", t: "跑输本市场"}]); },
+  paint: function(el, st){ var cols = [];
+    MS.forEach(function(mk){ var cs = ANAL.filter(function(c){ return D.secRel.some(function(r){ return r.m === mk && r.c === c; }); });
+      cs.forEach(function(c, j){ cols.push({m: mk, c: c, label: yr(c), group: j === 0 ? MN[mk] : null, gspan: cs.length, gcolor: MC(mk)}); }); });
+    var idx = {}; D.secRel.forEach(function(r){ idx[r.m + r.c + r.s] = r; });
+    heat(st, {cols: cols, rows: D.sectors.map(function(s){ return {k: s, label: s}; }), cap: .4, cmin: 30, cmax: 44,
+      cell: function(r, c){ var x = idx[c.m + c.c + r.k]; if (!x) return null;
+        return {v: x.rel, text: fpp(x.rel * 100, 0), tip: "<b>" + MN[c.m] + " " + c.c + " · " + r.k + "</b><br>行业中位数 " + fp(x.med) + "，比本市场" + (x.rel >= 0 ? "多涨 " : "少涨 ") + Math.abs(x.rel * 100).toFixed(1) + " 个百分点<br>上涨的股票 " + fpl(x.up) + "，共 " + x.n + " 只"}; }}); }};
+R.secPool = {init: function(el, st){ legend(st, [{c: "var(--n1)", t: "跑赢的比例"}, {c: "transparent", cls: "dash", t: "一半"}]); },
+  paint: function(el, st){ hrows(st, D.secPool.map(function(r){ return {name: r.s, sub: "相对中位数 " + fpp(r.medRel * 100, 1) + " 个百分点", v: r.share, color: "var(--n1)", label: r.k + "/" + r.n,
+      tip: "<b>" + r.s + "</b><br>跑赢 " + r.k + "/" + r.n + "（" + fpl(r.share) + "），p=" + r.p.toFixed(2) + "<br>港股 " + r.hk[0] + "/" + r.hk[1] + " · 美股 " + r.us[0] + "/" + r.us[1] + " · A 股 " + r.cn[0] + "/" + r.cn[1]}; }), {lo: 0, hi: 1, ref: .5}); }};
+R.secAgree = {init: function(el, st){ legend(st, [{c: "var(--ink2)", cls: "dot", t: "显著"}, {c: "transparent", cls: "ring", t: "不显著"}]); },
+  paint: function(el, st){ var pairs = ["港股–美股", "港股–A 股", "美股–A 股"], w = plotW(st), rh = 56, m = {l: 84, r: 16, t: 14, b: 24}, h = m.t + m.b + rh * pairs.length, svg = svgBox(w, h), x = lin(-1, 1, m.l, w - m.r);
+    [-1, -.5, 0, .5, 1].forEach(function(t){ S("line", {x1: x(t), x2: x(t), y1: m.t, y2: h - m.b, style: "stroke:" + (t === 0 ? "var(--muted)" : "var(--grid)")}, svg); T(svg, x(t), h - 6, fpp(t, 1).replace("+0.0", "0"), {"text-anchor": "middle", "class": "ax"}); });
+    pairs.forEach(function(p, i){ var yy = m.t + rh * i + rh / 2; T(svg, m.l - 10, yy + 4, p, {"text-anchor": "end", "class": "lab"});
+      var placed = []; D.secAgree.filter(function(r){ return r.pair === p; }).sort(function(a, b){ return a.rho - b.rho; }).forEach(function(r){ var sig = r.p < .05, lv = 0;
+        while (placed.some(function(q){ return q[1] === lv && Math.abs(q[0] - x(r.rho)) < 28; }) && lv < 3) lv++; placed.push([x(r.rho), lv]);
+        S("circle", {cx: x(r.rho), cy: yy, r: 6, style: sig ? "fill:var(--ink2)" : "fill:var(--surface);stroke:var(--ink2);stroke-width:1.5", "data-tip": "<b>" + r.c + " · " + p + "</b><br>排序相关 " + fpp(r.rho, 2) + "，" + r.n + " 个行业，p=" + r.p.toFixed(2)}, svg);
+        T(svg, x(r.rho), yy - 10 - lv * 9, yr(r.c), {"text-anchor": "middle", style: "font-size:9.5px"}); }); });
+    st.plot.replaceChildren(svg); }};
+R.secAbs = {init: function(el, st){ st.m = "hk"; st.w = "hiking"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); segc(st, "w", [["h6m", "前 6 个月"], ["hiking", "加息期"], ["to_cut", "到降息"]]);
+    legend(st, [{c: "var(--up)", t: "涨"}, {c: "var(--down)", t: "跌"}]); },
+  paint: function(el, st){ var mk = st.m, w = st.w, rowsD = D.secAbs[mk], cs = ANAL.filter(function(c){ return rowsD.some(function(r){ return r.c === c; }); }), idx = {};
+    rowsD.forEach(function(r){ idx[r.c + r.s] = r; });
+    var rows = D.sectors.map(function(s){ return {k: s, label: s}; }).concat([{k: "池内全部", label: "全部股票", strong: true}, {k: "IDX", label: IX[mk], strong: true}]);
+    heat(st, {cols: cs.map(function(c){ return {c: c, label: c + (wfor(w, c) !== w ? "*" : "")}; }), rows: rows, cap: .6, cmin: 50, cmax: 72, ch: 32, lw: 76,
+      cell: function(r, c){ var ww = wfor(w, c.c);
+        if (r.k === "IDX"){ var iv = D.idx[mk][c.c] ? D.idx[mk][c.c][ww] : null; if (iv == null) return null; return {v: iv, text: fp(iv), tip: "<b>" + IX[mk] + " " + c.c + "</b><br>" + WN[ww] + " " + fp(iv)}; }
+        var x = idx[c.c + r.k]; if (!x || x[ww] == null || x.n < 3) return null;
+        return {v: x[ww], text: fp(x[ww]), small: x.n + " 只", tip: "<b>" + MN[mk] + " " + c.c + " · " + r.label + "</b><br>" + WN[ww] + " 中位数 " + fp(x[ww]) + "<br>上涨的股票 " + fpl(x[ww + "Up"]) + "，共 " + x.n + " 只"}; }});
+    if (cs.some(function(c){ return wfor(w, c) !== w; })) st.plot.appendChild(H("p", {"class": "sub"}, "* 1997-03 只加了一次息，没有加息期，用到降息。")); }};
+
+/* ---------- 9. stocks ---------- */
+R.stocks = {init: function(el, st){ st.m = "hk"; st.dir = "top"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); st.cyc = H("div", {"class": "seg"}); st.ctl.appendChild(st.cyc);
+    st.win = H("div", {"class": "seg"}); st.ctl.appendChild(st.win); segc(st, "dir", [["top", "涨得最多"], ["bottom", "跌得最多"]]); st.head = H("p", {"class": "sub"}); st.el.insertBefore(st.head, st.plot); },
+  paint: function(el, st){ var mk = st.m, S5 = D.stocks[mk], cs = ANAL.filter(function(c){ return S5[c]; });
+    if (cs.indexOf(st.c) < 0) st.c = cs[cs.length - 1];
+    var ws = Object.keys(S5[st.c]); if (ws.indexOf(st.w) < 0) st.w = ws[0];
+    st.cyc.innerHTML = ""; cs.forEach(function(c){ var b = H("button", {type: "button", "aria-pressed": String(c === st.c)}, c); b.addEventListener("click", function(){ st.c = c; st.rep(); }); st.cyc.appendChild(b); });
+    st.win.innerHTML = ""; ws.forEach(function(w){ var b = H("button", {type: "button", "aria-pressed": String(w === st.w)}, WN[w]); b.addEventListener("click", function(){ st.w = w; st.rep(); }); st.win.appendChild(b); });
+    var g = S5[st.c][st.w], list = g[st.dir], wk = st.w;
+    st.head.textContent = MN[mk] + " " + st.c + " 段 · " + WN[wk] + "：" + g.n + " 只里上涨 " + g.up + " 只（" + fpl(g.up / g.n) + "）；" + IX[mk] + " " + fp(g.idx) + "。";
+    legend(st, [{c: MC(mk), t: "仍在上市"}, {c: "var(--n2)", t: "已退市"}]);
+    hrows(st, list.map(function(r){ var v = r[wk];
+      return {name: r.name, sub: r.code + " · " + r.sec, v: v, color: r.listed ? MC(mk) : "var(--n2)", label: fp(v),
+        tip: "<b>" + esc(r.name) + "</b>（" + esc(r.code) + "）<br>" + esc(r.sec) + (r.listed ? "" : "，已退市") + "<br>前 6 个月 " + fp(r.h6m) + (r.hiking != null ? "<br>加息期 " + fp(r.hiking) : "") + "<br>到降息 " + fp(r.to_cut)}; }), {}); }};
+
+/* ---------- 10. drivers ---------- */
+function regRow(m, c){ for (var i = 0; i < D.reg.length; i++){ var r = D.reg[i]; if (r.m === m && r.c === c) return r; } return null; }
+R.r2 = {init: function(el, st){ legend(st, MS.map(function(m){ return {c: MC(m), t: MN[m]}; })); st.tab = H("div", {"class": "tablewrap"}); st.el.appendChild(st.tab); },
+  paint: function(el, st){ var cs = ANAL.filter(function(c){ return MS.some(function(m){ return regRow(m, c); }); });
+    vbars(st, {h: hOf(el, 300), lo: 0, cats: cs.map(function(c){ return {k: c, label: c, sub: CYC[c].single ? "用到降息" : null}; }), b: 40, lab: function(v){ return fpl(v); },
+      series: MS.map(function(m){ return {color: MC(m), get: function(c){ var r = regRow(m, c); return r ? r.r2 : null; },
+        tip: function(c, v){ var r = regRow(m, c); return "<b>" + IX[m] + " " + c + "</b><br>能解释每周涨跌的 " + fpl(v) + "<br>站得住的因素：" + (r.robust.length ? r.robust.join("、") : "无"); }}; })});
+    st.tab.innerHTML = '<table class="rob"><thead><tr><th>段</th>' + MS.map(function(m){ return "<th><span class=\"mk\" style=\"background:" + MC(m) + "\"></span>" + MN[m] + "：站得住的因素</th>"; }).join("") + "</tr></thead><tbody>" +
+      cs.map(function(c){ return "<tr><td>" + c + "</td>" + MS.map(function(m){ var r = regRow(m, c); return "<td>" + (r ? (r.robust.length ? esc(r.robust.join("、")) : "无") : "—") + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>"; }};
+R.alpha = {init: function(el, st){ legend(st, MS.map(function(m){ return {c: MC(m), t: MN[m], cls: "dot"}; }).concat([{c: "transparent", cls: "ring", t: "空心 = 看不清"}])); },
+  paint: function(el, st){ var rows = ANAL.filter(function(c){ return MS.some(function(m){ var r = regRow(m, c); return r && r.alpha != null; }); });
+    var w = plotW(st), rh = 34, m = {l: 64, r: 16, t: 10, b: 28}, h = m.t + m.b + rh * rows.length, svg = svgBox(w, h), vals = [0];
+    D.reg.forEach(function(r){ if (r.alpha != null) vals.push(r.alpha); });
+    var lo = Math.min.apply(null, vals) - .03, hi = Math.max.apply(null, vals) + .03, x = lin(lo, hi, m.l, w - m.r);
+    ticks(lo, hi, 6).forEach(function(t){ S("line", {x1: x(t), x2: x(t), y1: m.t, y2: h - m.b, style: "stroke:" + (Math.abs(t) < 1e-9 ? "var(--muted)" : "var(--grid)")}, svg); T(svg, x(t), h - 8, fpp(t * 100, 0), {"text-anchor": "middle", "class": "ax"}); });
+    rows.forEach(function(c, i){ var yy = m.t + rh * i + rh / 2; T(svg, m.l - 10, yy + 4, c, {"text-anchor": "end", "class": "lab"});
+      MS.forEach(function(mk, j){ var r = regRow(mk, c); if (!r || r.alpha == null) return; var sig = Math.abs(r.t) >= 2;
+        S("circle", {cx: x(r.alpha), cy: yy + (j - 1) * 7, r: 6, style: sig ? "fill:" + MC(mk) + ";stroke:var(--surface);stroke-width:1.5" : "fill:var(--surface);stroke:" + MC(mk) + ";stroke-width:2",
+          "data-tip": "<b>" + MN[mk] + " " + c + "</b><br>扣掉指数和宏观因素后 " + fpp(r.alpha * 100, 1) + " 个百分点<br>t=" + fpp(r.t, 1) + (sig ? "，站得住" : "，看不清")}, svg); }); });
+    st.plot.replaceChildren(svg); }};
+R.xsec = {paint: function(el, st){ var feats = ["dps_growth", "div_yield_F", "mom12_pre", "beta_pre", "vol_pre", "log_turnover", "log_mktcap", "hshare", "ah_dual"], cols = [];
+    MS.forEach(function(mk){ ANAL.forEach(function(c){ if (D.xsec.some(function(r){ return r.m === mk && r.c === c; })) cols.push({m: mk, c: c}); }); });
+    var idx = {}; D.xsec.forEach(function(r){ idx[r.m + r.c + r.f] = r; });
+    var head1 = "<tr><th></th>" + MS.map(function(mk){ var n = cols.filter(function(c){ return c.m === mk; }).length; return n ? '<th colspan="' + n + '"><span class="mk" style="background:' + MC(mk) + '"></span>' + MN[mk] + "</th>" : ""; }).join("") + "<th>站得住的次数</th></tr>";
+    var head2 = "<tr><th></th>" + cols.map(function(c){ return "<th>" + yr(c.c) + "</th>"; }).join("") + "<th></th></tr>";
+    var body = feats.filter(function(f){ return D.xsec.some(function(r){ return r.f === f; }); }).map(function(f){ var pos = 0, neg = 0, n = 0;
+      var tds = cols.map(function(c){ var r = idx[c.m + c.c + f]; if (!r) return "<td></td>"; n++; var s = r.t >= 2 ? "pos" : r.t <= -2 ? "neg" : "ns"; if (s === "pos") pos++; if (s === "neg") neg++;
+        return '<td class="' + s + '" data-tip="' + esc("<b>" + MN[c.m] + " " + c.c + " · " + D.xsecNames[f] + "</b><br>高一个标准差的股票多涨 " + fpp(r.coef * 100, 0) + " 个百分点" + (f === "hshare" || f === "ah_dual" ? "（是/否）" : "") + "<br>t=" + fpp(r.t, 1)) + '">' + (s === "pos" ? "+" : s === "neg" ? "−" : "·") + "</td>"; }).join("");
+      return '<tr><th class="f">' + esc(D.xsecNames[f]) + "</th>" + tds + '<td class="sum">正 ' + pos + " · 负 " + neg + " / " + n + "</td></tr>"; }).join("");
+    st.plot.innerHTML = '<div class="tablewrap"><table class="xs"><thead>' + head1 + head2 + "</thead><tbody>" + body + "</tbody></table></div>"; }};
+R.div = {init: function(el, st){ st.m = "hk"; st.w = "hiking"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); segc(st, "w", [["hiking", "加息期"], ["to_cut", "到降息"]]); },
+  paint: function(el, st){ var mk = st.m, rows = D.div[mk].filter(function(r){ return r.w === wfor(st.w, r.c); }), map = {};
+    rows.forEach(function(r){ map[r.c] = r; }); legend(st, [{c: MC(mk), t: "分红带来的额外回报"}]);
+    vbars(st, {h: hOf(el, 280), lo: 0, b: 40, cats: rows.map(function(r){ return {k: r.c, label: r.c, sub: wfor(st.w, r.c) !== st.w ? "用到降息" : null}; }), fmt: function(t){ return String(Math.round(t)); }, lab: function(v){ return fpp(v, 1); },
+      series: [{color: MC(mk), get: function(c){ return map[c] ? map[c].pp : null; }, tip: function(c){ var r = map[c]; return "<b>" + MN[mk] + " " + c + " · " + WN[r.w] + "</b><br>只算股价 " + fp(r.price) + "<br>算上分红 " + fp(r.total) + "<br>差 " + fpp(r.pp, 1) + " 个百分点"; }}]}); }};
+
+/* ---------- 11. Hong Kong 2003-07 ---------- */
+R.hkIdx = {init: function(el, st){ st.w = "W1_2003low_2007high"; segc(st, "w", [["W1_2003low_2007high", "2003 低点 → 2007 高点"], ["S1_2003low_2005end", "2003 低点 → 2005 年底"], ["S2_2006_2007high", "2006 年初 → 2007 高点"]]);
+    legend(st, [{c: "var(--hk)", t: "港股指数"}, {c: "var(--n1)", t: "其他股市"}, {c: "var(--n2)", t: "商品和汇率"}]); },
+  paint: function(el, st){ var rows = D.hk0307.idx.filter(function(r){ return r[st.w] != null; }).sort(function(a, b){ return b[st.w] - a[st.w]; });
+    hrows(st, rows.map(function(r){ var hk = r.k === "HSI" || r.k === "HSCEI" || r.k === "HSI_Finance"; return {name: r.name, v: r[st.w], color: hk ? "var(--hk)" : r.eq ? "var(--n1)" : "var(--n2)", label: fp(r[st.w]),
+      tip: "<b>" + esc(r.name) + "</b><br>2003 低点 → 2007 高点 " + fp(r.W1_2003low_2007high) + "<br>2003 低点 → 2005 年底 " + fp(r.S1_2003low_2005end) + "<br>2006 年初 → 2007 高点 " + fp(r.S2_2006_2007high)}; }), {}); }};
+R.hkDecomp = {init: function(el, st){ legend(st, [{c: "var(--earn)", t: "盈利增长"}, {c: "var(--val)", t: "市盈率变化（估值）"}, {c: "var(--ink)", cls: "dot", t: "股价涨幅"}]); },
+  paint: function(el, st){ var NB = {"HSI members at end-2002": "2002 年底恒指成分股", "HSI members at end-2004": "2004 年底恒指成分股", "HSI members at end-2006": "2006 年底恒指成分股", "H shares (ISIN CNE)": "全部 H 股"};
+    var pick = [["HSI members at end-2002", 2002, 2007], ["HSI members at end-2002", 2002, 2004], ["HSI members at end-2004", 2004, 2006], ["HSI members at end-2006", 2006, 2007],
+                ["H shares (ISIN CNE)", 2002, 2007], ["H shares (ISIN CNE)", 2002, 2004], ["H shares (ISIN CNE)", 2004, 2006], ["H shares (ISIN CNE)", 2006, 2007]];
+    var rows = pick.map(function(p){ return D.hk0307.decomp.filter(function(r){ return r.b === p[0] && r.from === p[1] && r.to === p[2]; })[0]; }).filter(Boolean);
+    var w = plotW(st), lw = Math.min(190, w * .38), rh = 30, m = {r: 14, t: 6, b: 26}, h = m.t + m.b + rh * rows.length, svg = svgBox(w, h), vals = [0];
+    rows.forEach(function(r){ vals.push(Math.max(0, r.E) + Math.max(0, r.PE), Math.min(0, r.E) + Math.min(0, r.PE), r.price); });
+    var lo = Math.min.apply(null, vals) - .05, hi = Math.max.apply(null, vals) + .05, x = lin(lo, hi, lw, w - m.r);
+    ticks(lo, hi, 6).forEach(function(t){ S("line", {x1: x(t), x2: x(t), y1: m.t, y2: h - m.b, style: "stroke:" + (Math.abs(t) < 1e-9 ? "var(--muted)" : "var(--grid)")}, svg); T(svg, x(t), h - 8, String(Math.round(t * 100)), {"text-anchor": "middle", "class": "ax"}); });
+    rows.forEach(function(r, i){ var yy = m.t + rh * i, pos = 0, neg = 0;
+      T(svg, lw - 8, yy + rh / 2 + 4, NB[r.b] + " " + String(r.from).slice(2) + "→" + String(r.to).slice(2), {"text-anchor": "end", "class": "lab", style: "font-size:10.5px"});
+      var tp = "<b>" + NB[r.b] + " " + r.from + " 年底 → " + r.to + " 年底</b>（" + r.n + " 只）<br>股价 " + fp(Math.exp(r.price) - 1) + "（对数 " + fpp(r.price * 100, 0) + "）<br>盈利增长 " + fpp(r.E * 100, 0) + "，估值 " + fpp(r.PE * 100, 0) + "（市盈率 " + r.PE0.toFixed(1) + " → " + r.PE1.toFixed(1) + " 倍）<br>盈利占 " + Math.round(r.share * 100) + "%";
+      [["E", "var(--earn)"], ["PE", "var(--val)"]].forEach(function(q){ var v = r[q[0]], a, b; if (v >= 0){ a = pos; b = pos + v; pos = b; } else { a = neg + v; b = neg; neg = a; }
+        S("rect", {x: x(a), y: yy + 7, width: Math.max(1, x(b) - x(a)), height: rh - 14, style: "fill:" + q[1], "data-tip": tp}, svg); });
+      S("circle", {cx: x(r.price), cy: yy + rh / 2, r: 4, style: "fill:var(--ink);stroke:var(--surface);stroke-width:1.5", "data-tip": tp}, svg); });
+    st.plot.replaceChildren(svg); }};
+
+/* ---------- 12. the 2026 hike: 1997 precedent ---------- */
+R.now97 = {init: function(el, st){ legend(st, MS.map(function(m){ return {c: MC(m), t: IX[m]}; })); },
+  paint: function(el, st){ linePlot(st, hOf(el, 300), MS.filter(function(m){ return D.paths[m]["1997-03"]; }).map(function(m){ var p = D.paths[m]["1997-03"], e = p.pts[p.pts.length - 1];
+    return {k: m, name: IX[m], pts: p.pts, L: null, hl: true, color: MC(m), tip: "<b>" + IX[m] + "</b><br>1997-03-25 → 1998-09-29 " + fp(e[1] / 100 - 1)}; }), {r: 96}); }};
+
+/* ---------- 13. coverage ---------- */
+R.thresh = {init: function(el, st){ st.m = "hk"; segc(st, "m", MS.map(function(m){ return [m, MN[m]]; })); },
+  paint: function(el, st){ var mk = st.m, g = D.cov.grid[mk].filter(function(r){ return r.cont === .9 && r.price === 0 && r.share > 0; }), cs = [];
+    g.forEach(function(r){ if (cs.indexOf(r.c) < 0) cs.push(r.c); }); cs.sort();
+    var shares = []; g.forEach(function(r){ if (shares.indexOf(r.share) < 0) shares.push(r.share); }); shares.sort(function(a, b){ return a - b; });
+    var w = plotW(st), h = hOf(el, 320), m = {l: 44, r: 70, t: 14, b: 30}, svg = svgBox(w, h), L10 = function(v){ return Math.log10(v); };
+    var x = lin(L10(shares[0]), L10(shares[shares.length - 1]), m.l, w - m.r), meds = g.map(function(r){ return r.med; }), lo = Math.min(0, Math.min.apply(null, meds)) - .05, hi = Math.max(0, Math.max.apply(null, meds)) + .05, y = lin(lo, hi, h - m.b, m.t);
+    ticks(lo, hi, 5).forEach(function(t){ S("line", {x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), style: "stroke:var(--grid)"}, svg); T(svg, m.l - 6, y(t) + 4, fpl(t), {"text-anchor": "end", "class": "ax"}); });
+    S("line", {x1: m.l, x2: w - m.r, y1: y(0), y2: y(0), style: "stroke:var(--muted)"}, svg);
+    shares.forEach(function(s){ T(svg, x(L10(s)), h - 10, (s * 100).toFixed(2) + "%", {"text-anchor": "middle", "class": s === .0002 ? "lab" : "ax"}); });
+    S("line", {x1: x(L10(.0002)), x2: x(L10(.0002)), y1: m.t, y2: h - m.b, style: "stroke:var(--ink2);stroke-dasharray:3 3"}, svg);
+    cs.forEach(function(c){ var pts = shares.map(function(s){ var r = g.filter(function(q){ return q.c === c && q.share === s; })[0]; return r ? [s, r.med, r.n] : null; }).filter(Boolean);
+      var d = pts.map(function(p, i){ return (i ? "L" : "M") + x(L10(p[0])).toFixed(1) + " " + y(p[1]).toFixed(1); }).join("");
+      S("path", {d: d, style: "fill:none;stroke:" + MC(mk) + ";stroke-width:1.6;opacity:.85"}, svg);
+      pts.forEach(function(p){ S("circle", {cx: x(L10(p[0])), cy: y(p[1]), r: 3.5, style: "fill:" + MC(mk), "data-tip": "<b>" + MN[mk] + " " + c + "</b><br>门槛 " + (p[0] * 100).toFixed(2) + "%：中位数 " + fp(p[1]) + "，" + p[2] + " 只"}, svg); });
+      var e = pts[pts.length - 1]; T(svg, x(L10(e[0])) + 6, y(e[1]) + 4, c, {style: "font-size:10px"}); });
+    st.plot.replaceChildren(svg); }};
+R.surv = {init: function(el, st){ legend(st, [{c: "var(--hk)", cls: "dot", t: "观测"}, {c: "var(--n2)", t: "最坏到最好"}]); },
+  paint: function(el, st){ var rows = D.cov.surv.filter(function(r){ return r.w === "hiking"; }), w = plotW(st), rh = 40, m = {l: 64, r: 16, t: 8, b: 26}, h = m.t + m.b + rh * rows.length, svg = svgBox(w, h), vals = [0];
+    rows.forEach(function(r){ vals.push(r.worst, r.best, r.obs); }); var lo = Math.min.apply(null, vals) - .03, hi = Math.max.apply(null, vals) + .03, x = lin(lo, hi, m.l, w - m.r);
+    ticks(lo, hi, 6).forEach(function(t){ S("line", {x1: x(t), x2: x(t), y1: m.t, y2: h - m.b, style: "stroke:" + (Math.abs(t) < 1e-9 ? "var(--muted)" : "var(--grid)")}, svg); T(svg, x(t), h - 8, fpl(t), {"text-anchor": "middle", "class": "ax"}); });
+    rows.forEach(function(r, i){ var yy = m.t + rh * i + rh / 2, tp = "<b>港股 " + r.c + " · 加息期 · 全部股票</b><br>缺失 " + r.miss + " 家（占 " + fpl(r.share) + "）<br>观测 " + fp(r.obs) + "，最坏 " + fp(r.worst) + "，最好 " + fp(r.best);
+      T(svg, m.l - 10, yy + 4, r.c, {"text-anchor": "end", "class": "lab"});
+      S("line", {x1: x(r.worst), x2: x(r.best), y1: yy, y2: yy, style: "stroke:var(--n2);stroke-width:6;stroke-linecap:round", "data-tip": tp}, svg);
+      S("circle", {cx: x(r.obs), cy: yy, r: 5.5, style: "fill:var(--hk);stroke:var(--surface);stroke-width:1.5", "data-tip": tp}, svg); });
+    st.plot.replaceChildren(svg); }};
+R.cn23 = {init: function(el, st){ legend(st, [{c: "var(--n2)", t: "Compustat 股价"}, {c: "var(--n1)", t: "Compustat 总回报"}, {c: "var(--cn)", t: "Baostock 复权价"}]); },
+  paint: function(el, st){ var rows = D.cov.cn23, map = {}; rows.forEach(function(r){ map[r.c] = r; });
+    var g = function(k){ return function(c){ return map[c][k]; }; }, tp = function(c){ var r = map[c]; return "<b>A 股 " + c + "</b>（" + r.n + " 只）<br>Compustat 股价 " + fp(r.cs) + "<br>Compustat 总回报 " + fp(r.cst) + "<br>Baostock " + fp(r.bao) + "<br>两者相差超过 5 个百分点的股票 " + fpl(r.gt5); };
+    vbars(st, {h: hOf(el, 280), b: 30, cats: rows.map(function(r){ return {k: r.c, label: r.c}; }), series: [{color: "var(--n2)", get: g("cs"), tip: tp}, {color: "var(--n1)", get: g("cst"), tip: tp}, {color: "var(--cn)", get: g("bao"), tip: tp}]}); }};
+
+/* ---------- router ---------- */
+var pages = [].slice.call(document.querySelectorAll("section.page")), navLinks = [].slice.call(document.querySelectorAll(".rail a")), ids = pages.map(function(p){ return p.id.slice(2); });
+var menuBtn = document.querySelector(".menu"), rail = document.getElementById("nav");
+menuBtn.addEventListener("click", function(){ var o = !rail.classList.contains("open"); rail.classList.toggle("open", o); menuBtn.setAttribute("aria-expanded", String(o)); });
+pages.forEach(function(p, i){ var pg = H("nav", {"class": "pager", "aria-label": "上一页和下一页"}), pr = pages[i - 1], nx = pages[i + 1];
+  pg.innerHTML = (pr ? '<a href="#' + pr.id.slice(2) + '"><span>上一页</span>' + esc(pr.getAttribute("data-short")) + "</a>" : "<span></span>") + (nx ? '<a href="#' + nx.id.slice(2) + '" style="text-align:right"><span>下一页</span>' + esc(nx.getAttribute("data-short")) + "</a>" : "<span></span>");
+  p.appendChild(pg); });
+var current = null;
+function show(){ var id = (location.hash || "#home").slice(1); if (ids.indexOf(id) < 0) id = "home";
+  var changed = id !== current; current = id;
+  pages.forEach(function(p){ p.hidden = p.id !== "p-" + id; });
+  navLinks.forEach(function(a){ if (a.getAttribute("data-p") === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  var pg = document.getElementById("p-" + id); document.title = pg.getAttribute("data-title") + (id === "home" ? "" : " · 美联储加息与三地股市");
+  rail.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false");
+  if (changed) window.scrollTo(0, 0);
+  pg.querySelectorAll(".chart[data-c]").forEach(function(el){ if (!el._st || el._w !== el.clientWidth) draw(el); }); }
+window.addEventListener("hashchange", show);
+var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(function(){ var pg = document.getElementById("p-" + current); if (pg) pg.querySelectorAll(".chart[data-c]").forEach(function(el){ if (el._w !== el.clientWidth) draw(el); }); }, 150); });
+function redrawAll(){ var pg = document.getElementById("p-" + current); if (pg) pg.querySelectorAll(".chart[data-c]").forEach(function(el){ if (el._st) el._st.rep(); }); }
+if (window.matchMedia) { var mq = matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", redrawAll); }
+if (window.MutationObserver) new MutationObserver(redrawAll).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+show();
+})();
+</script>
