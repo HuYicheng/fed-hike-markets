@@ -669,7 +669,8 @@ data_json = json.dumps(D, ensure_ascii=False, separators=(",", ":")).replace("</
 body = tpl.replace("{{NAV}}", nav).replace("{{PAGES}}", "\n".join(PAGES)).replace("{{BUILT}}", BUILT).replace("{{DATA}}", data_json)
 assert "{{" not in body, re.findall(r"\{\{\w+\}\}", body)
 head = ('<!doctype html>\n<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-        '<meta name="description" content="1987 年 6 月以来美联储 8 段已走完的加息里，港股、美股、A 股的涨跌、行业和推动因素；数字全部从结果表计算。">\n')
+        '<meta name="description" content="1987 年 6 月以来美联储 8 段已走完的加息里，港股、美股、A 股的涨跌、行业和推动因素；数字全部从结果表计算。">\n'
+        "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2317191e'/%3E%3Cpath d='M3 11 6 8l3 2 4-6' stroke='%23ead4ba' stroke-width='1.8' fill='none'/%3E%3C/svg%3E\">\n")
 if not PUBLIC: open(f"{OUT}/artifact.html", "w", encoding="utf-8").write(body)
 open(f"{OUT}/index.html", "w", encoding="utf-8").write(head + body.replace("<!--HEAD-END-->", "</head><body>", 1) + "\n</body></html>\n")
 if not PUBLIC:   # keep a copy of the generator next to the page, so the GitHub repo holds what built it
