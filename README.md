@@ -8,12 +8,13 @@
 
 ## 怎么看
 
-- **网页版：** https://claude.ai/artifact/27edgtJhGxsFQLs6WT8Tbw ，是私有页面，只有本人能打开。
+- **网址（GitHub Pages）：** https://huyicheng.github.io/fed-hike-markets/
+- **claude.ai 网页版：** https://claude.ai/artifact/27edgtJhGxsFQLs6WT8Tbw （私有）
 - **本地打开：** 下载 `index.html`，直接用浏览器打开。
   - 整个网站就是这一个文件，数据都在里面，不需要联网。
   - 网址后面加 `#rise`、`#sector` 这样的标记，可以直接打开某一页。
 
-这个仓库是私有的，没有开 GitHub Pages。个人账号的 Pages 网页对所有人公开，私有仓库也一样。
+仓库和网页都是公开的。
 
 ## 内容
 
@@ -34,7 +35,7 @@
 
 ## 数据和授权
 
-- 个股的涨跌来自 WRDS 授权的数据，只供本人使用，不要公开：
+- 个股的涨跌来自 WRDS 授权的数据：
   - 美股用 CRSP；
   - 港股用 Compustat Global，用新浪、腾讯、Yahoo 补缺；
   - A 股用 Baostock，分红和行业用 Compustat。
